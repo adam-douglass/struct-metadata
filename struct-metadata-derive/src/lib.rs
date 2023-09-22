@@ -5,31 +5,64 @@ use syn::{parse_macro_input, DeriveInput};
 
 #[proc_macro_derive(Described)]
 pub fn derive(input: TokenStream) -> TokenStream {
-    let DeriveInput {ident, attrs, ..} = parse_macro_input!(input);
+    let DeriveInput {ident, attrs, data, ..} = parse_macro_input!(input);
 
-    let docs = match parse_doc_comment(&attrs) {
-        Some(docs) => quote!{ Some(vec![
-            #( #docs, )*
-        ])},
-        None => quote! { None }
-    };
+    match data {
+        syn::Data::Struct(data) => {
 
-    let output = quote! {
-        impl struct_metadata::Described for #ident {
-            fn metadata() -> struct_metadata::Descriptor {
-                struct_metadata::Descriptor {
-                    docs: #docs,
-                    name: stringify!(#ident).to_owned(),
-                    kind: "struct".to_owned(),
+            let kind = match data.fields {
+                syn::Fields::Named(fields) => {
+                    let mut names = vec![];
+                    let mut types = vec![];
+
+                    for field in fields.named {
+                        names.push(field.ident.unwrap());
+                        let ty = &field.ty;
+                        types.push(quote!(<#ty as struct_metadata::Described>::metadata()))
+                    }
+
+                    quote!(Kind::Struct { children: vec![
+                        #(#names, #types),*
+                    ] })
+                },
+                syn::Fields::Unnamed(fields) => {
+                    if fields.unnamed.is_empty() {
+                        quote!(Kind::Struct { children: vec![] })
+                    } else if fields.unnamed.len() == 1 {
+                        let ty = &fields.unnamed[0].ty;
+                        quote!(<#ty as struct_metadata::Described>::metadata().kind)
+                    } else {
+                        panic!("tuple struct not supported")
+                    }
+                },
+                syn::Fields::Unit => {
+                    quote!(Kind::Struct { children: vec![] })
+                },
+            };
+
+            let docs = parse_doc_comment(&attrs);
+            let output = quote! {
+                impl struct_metadata::Described for #ident {
+                    fn metadata() -> struct_metadata::Descriptor {
+                        struct_metadata::Descriptor {
+                            docs: #docs,
+                            name: stringify!(#ident).to_owned(),
+                            kind: #kind,
+                        }
+                    }
                 }
-            }
-        }
-    };
+            };
 
-    output.into()
+            output.into()
+        }
+
+        _ => {
+            panic!("only structs are supported")
+        }
+    }
 }
 
-fn parse_doc_comment(attrs: &[syn::Attribute]) -> Option<Vec<String>> {
+fn parse_doc_comment(attrs: &[syn::Attribute]) -> proc_macro2::TokenStream {
     let mut lines = vec![];
     for attr in attrs {
         let meta = attr.parse_meta().unwrap();
@@ -40,9 +73,12 @@ fn parse_doc_comment(attrs: &[syn::Attribute]) -> Option<Vec<String>> {
             }
         }
     }
+
     if lines.is_empty() {
-        None
+        quote! { None }
     } else {
-        Some(lines)
+        quote!{ Some(vec![
+            #( #lines, )*
+        ])}
     }
 }
