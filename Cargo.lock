@@ -23,6 +23,9 @@ dependencies = [
 [[package]]
 name = "struct-metadata"
 version = "0.1.0"
+dependencies = [
+ "struct-metadata-derive",
+]
 
 [[package]]
 name = "struct-metadata-derive"
