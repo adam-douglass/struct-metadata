@@ -1,5 +1,7 @@
+//! Derive macro for the struct-metadata package.
+
 #![warn(missing_docs, non_ascii_idents, trivial_numeric_casts,
-    unused_crate_dependencies, noop_method_call, single_use_lifetimes, trivial_casts,
+    noop_method_call, single_use_lifetimes, trivial_casts,
     unused_lifetimes, nonstandard_style, variant_size_differences)]
 #![deny(keyword_idents)]
 #![warn(clippy::missing_docs_in_private_items)]
@@ -31,7 +33,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                         let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &field.attrs);
 
                         children.push(quote!{struct_metadata::Entry {
-                            label: stringify!(#name).to_owned(),
+                            label: stringify!(#name),
                             docs: #docs,
                             metadata: #metadata,
                             type_info: #ty
@@ -39,22 +41,22 @@ pub fn derive(input: TokenStream) -> TokenStream {
                     }
 
                     quote!(struct_metadata::Kind::Struct {
-                        name: stringify!(#ident).to_owned(),
+                        name: stringify!(#ident),
                         children: vec![#(#children),*]
                     })
                 },
                 syn::Fields::Unnamed(fields) => {
                     if fields.unnamed.is_empty() {
-                        quote!(struct_metadata::Kind::Struct { name: stringify!(#ident).to_owned(), children: vec![] })
+                        quote!(struct_metadata::Kind::Struct { name: stringify!(#ident), children: vec![] })
                     } else if fields.unnamed.len() == 1 {
                         let ty = &fields.unnamed[0].ty;
-                        quote!(struct_metadata::Kind::Aliased { name: stringify!(#ident).to_owned(), kind: Box::new(<#ty as struct_metadata::Described>::metadata())})
+                        quote!(struct_metadata::Kind::Aliased { name: stringify!(#ident), kind: Box::new(<#ty as struct_metadata::Described>::metadata())})
                     } else {
                         panic!("tuple struct not supported")
                     }
                 },
                 syn::Fields::Unit => {
-                    quote!(struct_metadata::Kind::Struct { name: stringify!(#ident).to_owned(), children: vec![] })
+                    quote!(struct_metadata::Kind::Struct { name: stringify!(#ident), children: vec![] })
                 },
             };
 

@@ -23,7 +23,7 @@ struct DoubleFeatured;
 #[test]
 fn single_featured() {
     let data = SingleFeatured::metadata();
-    assert_eq!(data.kind, Kind::Struct{ name: "SingleFeatured".to_string(), children: vec![]});
+    assert_eq!(data.kind, Kind::Struct{ name: "SingleFeatured", children: vec![]});
     assert_eq!(data.docs, None);
     assert_eq!(data.metadata, Properties{important: true, cats: ""});
 }
@@ -31,7 +31,7 @@ fn single_featured() {
 #[test]
 fn dual_featured() {
     let data = DoubleFeatured::metadata();
-    assert_eq!(data.kind, Kind::Struct{ name: "DoubleFeatured".to_string(), children: vec![]});
+    assert_eq!(data.kind, Kind::Struct{ name: "DoubleFeatured", children: vec![]});
     assert_eq!(data.docs, None);
     assert_eq!(data.metadata, Properties{important: true, cats: "Less than 10"});
 }
@@ -56,7 +56,7 @@ struct DoubleVecFeatured;
 #[test]
 fn single_vec_featured() {
     let data = SingleVecFeatured::metadata();
-    assert_eq!(data.kind, Kind::Struct{ name: "SingleVecFeatured".to_string(), children: vec![]});
+    assert_eq!(data.kind, Kind::Struct{ name: "SingleVecFeatured", children: vec![]});
     assert_eq!(data.docs, None);
     assert_eq!(data.metadata, vec![("important", "true")]);
 }
@@ -64,7 +64,7 @@ fn single_vec_featured() {
 #[test]
 fn dual_vec_featured() {
     let data = DoubleVecFeatured::metadata();
-    assert_eq!(data.kind, Kind::Struct{ name: "DoubleVecFeatured".to_string(), children: vec![]});
+    assert_eq!(data.kind, Kind::Struct{ name: "DoubleVecFeatured", children: vec![]});
     assert_eq!(data.docs, None);
     assert_eq!(data.metadata, vec![("important", "true"), ("cats", "\"Less than 10\"")]);
 }
