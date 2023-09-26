@@ -12,8 +12,8 @@ use quote::{quote, quote_spanned, ToTokens};
 use syn::spanned::Spanned;
 use syn::{parse_macro_input, DeriveInput, Token, Ident, LitBool};
 
-
-#[proc_macro_derive(Described, attributes(metadata, metadata_type, metadata_sequence))]
+/// Derive macro for the Described trait
+#[proc_macro_derive(Described, attributes(metadata, metadata_type, metadata_sequence, serde))]
 pub fn derive(input: TokenStream) -> TokenStream {
     let DeriveInput {ident, attrs, data, ..} = parse_macro_input!(input);
 
@@ -27,14 +27,21 @@ pub fn derive(input: TokenStream) -> TokenStream {
                     let mut children = vec![];
 
                     for field in &fields.named {
+                        let SerdeParams {rename, .. } = _parse_serde_renames(&field.attrs);
                         let name = field.ident.clone().unwrap();
                         let ty = &field.ty;
                         let ty = quote_spanned!(ty.span() => <#ty as struct_metadata::Described::<#metadata_type>>::metadata());
                         let docs = parse_doc_comment(&field.attrs);
                         let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &field.attrs);
 
+                        let name = if let Some(rename) = rename {
+                            rename
+                        } else {
+                            name.to_string()
+                        };
+
                         children.push(quote!{struct_metadata::Entry::<#metadata_type> {
-                            label: stringify!(#name),
+                            label: #name,
                             docs: #docs,
                             metadata: #metadata,
                             type_info: #ty
@@ -85,6 +92,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
     }
 }
 
+/// Helper function to pull out docstrings
 fn parse_doc_comment(attrs: &[syn::Attribute]) -> proc_macro2::TokenStream {
     let mut lines = vec![];
     for attr in attrs {
@@ -105,8 +113,11 @@ fn parse_doc_comment(attrs: &[syn::Attribute]) -> proc_macro2::TokenStream {
     }
 }
 
+/// Description of metadata type being used
 enum MetadataKind {
+    /// Metadata is being described by a struct
     Type(proc_macro2::TokenStream, bool),
+    /// Metadata is being described by something that implements FromIterator<(&'static str, &'static str)>
     Sequence(proc_macro2::TokenStream),
 }
 
@@ -119,6 +130,7 @@ impl ToTokens for MetadataKind {
     }
 }
 
+/// Helper function to find the type being used for metadata
 fn parse_metadata_type(attrs: &[syn::Attribute]) -> MetadataKind {
     let metadata_type = _parse_metadata_type(attrs);
     let metadata_sequence = _parse_metadata_sequence(attrs);
@@ -134,6 +146,7 @@ fn parse_metadata_type(attrs: &[syn::Attribute]) -> MetadataKind {
     }
 }
 
+/// Parse metadata type if its a sequence type
 fn _parse_metadata_sequence(attrs: &[syn::Attribute]) -> Option<proc_macro2::TokenStream> {
     for attr in attrs {
         if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "metadata_sequence" {
@@ -144,6 +157,7 @@ fn _parse_metadata_sequence(attrs: &[syn::Attribute]) -> Option<proc_macro2::Tok
     None
 }
 
+/// Parse metadata type if its a struct
 fn _parse_metadata_type(attrs: &[syn::Attribute]) -> Option<(proc_macro2::TokenStream, bool)> {
     for attr in attrs {
         if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "metadata_type" {
@@ -154,7 +168,7 @@ fn _parse_metadata_type(attrs: &[syn::Attribute]) -> Option<(proc_macro2::TokenS
     None
 }
 
-
+/// Parse out the metadata attribute
 fn parse_metadata_params(metatype: &MetadataKind, attrs: &[syn::Attribute]) -> proc_macro2::TokenStream {
     match metatype {
         MetadataKind::Sequence(_) => {
@@ -191,6 +205,7 @@ fn parse_metadata_params(metatype: &MetadataKind, attrs: &[syn::Attribute]) -> p
     }
 }
 
+/// Helper to parse out the metadata_type attribute
 struct MetadataType(syn::Type, bool);
 impl syn::parse::Parse for MetadataType {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
@@ -224,8 +239,7 @@ impl syn::parse::Parse for MetadataType {
     }
 }
 
-
-
+/// Helper to parse out the metadata attribute
 struct MetadataParams(Vec<syn::Ident>, Vec<syn::Expr>);
 impl syn::parse::Parse for MetadataParams {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
@@ -253,6 +267,56 @@ impl syn::parse::Parse for MetadataParams {
         }
 
         Ok(MetadataParams(names, values))
+    }
+}
+
+/// Parse metadata type if its a struct
+fn _parse_serde_renames(attrs: &[syn::Attribute]) -> SerdeParams {
+    for attr in attrs {
+        if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "serde" {
+            return syn::parse2(attr.tokens.clone()).expect("Invalid serde");
+        }
+    }
+    Default::default()
+}
+
+/// Helper to parse out the serde attribute
+#[derive(Default)]
+struct SerdeParams {
+    rename: Option<String>,
+    // rename_all: ,
+    // rename
+}
+impl syn::parse::Parse for SerdeParams {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let content;
+        syn::parenthesized!(content in input);
+
+        let mut out = SerdeParams::default();
+        // let mut names: Vec<syn::Ident> = vec![];
+        // let mut values: Vec<syn::Expr> = vec![];
+
+        loop {
+            let key: syn::Ident = content.parse()?;
+            if content.peek(Token![:]) {
+                content.parse::<Token![:]>()?;
+            } else {
+                content.parse::<Token![=]>()?;
+            }
+            let value: syn::LitStr = content.parse()?;
+
+            if key == "rename" {
+                out.rename = Some(value.value());
+            }
+
+            if content.is_empty() {
+                break
+            }
+            content.parse::<Token![,]>()?;
+        }
+
+//         Ok(MetadataParams(names, values))
+        Ok(out)
     }
 }
 
