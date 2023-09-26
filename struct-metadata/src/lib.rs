@@ -31,6 +31,7 @@ pub enum Kind<Metadata: Default> {
     Sequence( Box<Descriptor<Metadata>> ),
     Option( Box<Descriptor<Metadata>> ),
     Mapping( Box<Descriptor<Metadata>>, Box<Descriptor<Metadata>> ),
+    DateTime,
     Bool,
     U64,
     String,
@@ -85,6 +86,7 @@ impl<M: Default, T: Described<M>> Described<M> for Option<T> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<M: Default, T: Described<M>> Described<M> for Vec<T> {
     fn metadata() -> Descriptor<M> {
         Descriptor {
@@ -95,6 +97,7 @@ impl<M: Default, T: Described<M>> Described<M> for Vec<T> {
     }
 }
 
+#[cfg(feature = "std")]
 impl<M: Default, K: Described<M> + core::hash::Hash, V: Described<M>> Described<M> for HashMap<K, V> {
     fn metadata() -> Descriptor<M> {
         Descriptor {
@@ -102,5 +105,12 @@ impl<M: Default, K: Described<M> + core::hash::Hash, V: Described<M>> Described<
             metadata: M::default(),
             kind: Kind::Mapping(Box::new(K::metadata()), Box::new(V::metadata()))
         }
+    }
+}
+
+#[cfg(feature = "chrono")]
+impl<M: Default, Tz: chrono::TimeZone> Described<M> for chrono::DateTime<Tz> {
+    fn metadata() -> Descriptor<M> {
+        Descriptor { docs: None, metadata: M::default(), kind: Kind::DateTime }
     }
 }

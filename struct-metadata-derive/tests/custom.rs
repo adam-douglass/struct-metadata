@@ -1,4 +1,5 @@
 #![cfg(test)]
+#![allow(unused)]
 
 use struct_metadata::{Kind, Described, Descriptor, Entry};
 
