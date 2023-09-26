@@ -8,7 +8,8 @@
 #![allow(clippy::needless_return, clippy::while_let_on_iterator)]
 
 use proc_macro::{self, TokenStream};
-use quote::{quote, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
+use syn::spanned::Spanned;
 use syn::{parse_macro_input, DeriveInput, Token, Ident, LitBool};
 
 
@@ -25,14 +26,14 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 syn::Fields::Named(fields) => {
                     let mut children = vec![];
 
-                    for field in fields.named {
-                        let name = field.ident.unwrap();
+                    for field in &fields.named {
+                        let name = field.ident.clone().unwrap();
                         let ty = &field.ty;
-                        let ty = quote!(<#ty as struct_metadata::Described>::metadata());
+                        let ty = quote_spanned!(ty.span() => <#ty as struct_metadata::Described::<#metadata_type>>::metadata());
                         let docs = parse_doc_comment(&field.attrs);
                         let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &field.attrs);
 
-                        children.push(quote!{struct_metadata::Entry {
+                        children.push(quote!{struct_metadata::Entry::<#metadata_type> {
                             label: stringify!(#name),
                             docs: #docs,
                             metadata: #metadata,
@@ -40,23 +41,24 @@ pub fn derive(input: TokenStream) -> TokenStream {
                         }});
                     }
 
-                    quote!(struct_metadata::Kind::Struct {
+                    quote!(struct_metadata::Kind::Struct::<#metadata_type> {
                         name: stringify!(#ident),
                         children: vec![#(#children),*]
                     })
                 },
                 syn::Fields::Unnamed(fields) => {
                     if fields.unnamed.is_empty() {
-                        quote!(struct_metadata::Kind::Struct { name: stringify!(#ident), children: vec![] })
+                        quote!(struct_metadata::Kind::<#metadata_type>::Struct { name: stringify!(#ident), children: vec![] })
                     } else if fields.unnamed.len() == 1 {
                         let ty = &fields.unnamed[0].ty;
-                        quote!(struct_metadata::Kind::Aliased { name: stringify!(#ident), kind: Box::new(<#ty as struct_metadata::Described>::metadata())})
+                        let ty = quote_spanned!(ty.span() => <#ty as struct_metadata::Described::<#metadata_type>>::metadata());
+                        quote!(struct_metadata::Kind::<#metadata_type>::Aliased { name: stringify!(#ident), kind: Box::new(#ty)})
                     } else {
                         panic!("tuple struct not supported")
                     }
                 },
                 syn::Fields::Unit => {
-                    quote!(struct_metadata::Kind::Struct { name: stringify!(#ident), children: vec![] })
+                    quote!(struct_metadata::Kind::<#metadata_type>::Struct { name: stringify!(#ident), children: vec![] })
                 },
             };
 
@@ -158,9 +160,9 @@ fn parse_metadata_params(metatype: &MetadataKind, attrs: &[syn::Attribute]) -> p
         MetadataKind::Sequence(_) => {
             for attr in attrs {
                 if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "metadata" {
-                    let NotesParams (names, values) = syn::parse2(attr.tokens.clone()).expect("Invalid metadata attribute");
+                    let MetadataParams (names, values) = syn::parse2(attr.tokens.clone()).expect("Invalid metadata attribute");
                     return quote!{ [
-                        #((stringify!(#names), stringify!(#values))),*
+                        #((stringify!(#names), stringify!(#values).into())),*
                     ].into_iter().collect() }
                 }
             }
@@ -175,10 +177,10 @@ fn parse_metadata_params(metatype: &MetadataKind, attrs: &[syn::Attribute]) -> p
 
             for attr in attrs {
                 if attr.path.segments.len() == 1 && attr.path.segments[0].ident == "metadata" {
-                    let NotesParams (names, values) = syn::parse2(attr.tokens.clone()).expect("Invalid metadata attribute");
+                    let MetadataParams (names, values) = syn::parse2(attr.tokens.clone()).expect("Invalid metadata attribute");
                     return quote!{
                         #type_name {
-                            #(#names: #values,)*
+                            #(#names: #values.into(),)*
                             #defaults
                         }
                     }
@@ -205,7 +207,11 @@ impl syn::parse::Parse for MetadataType {
         content.parse::<Token![,]>()?;
 
         let param: Ident = content.parse()?;
-        content.parse::<Token![:]>()?;
+        if content.peek(Token![:]) {
+            content.parse::<Token![:]>()?;
+        } else {
+            content.parse::<Token![=]>()?;
+        }
         let value: LitBool = content.parse()?;
 
         if param == "defaults" {
@@ -220,8 +226,8 @@ impl syn::parse::Parse for MetadataType {
 
 
 
-struct NotesParams(Vec<syn::Ident>, Vec<syn::Expr>);
-impl syn::parse::Parse for NotesParams {
+struct MetadataParams(Vec<syn::Ident>, Vec<syn::Expr>);
+impl syn::parse::Parse for MetadataParams {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let content;
         syn::parenthesized!(content in input);
@@ -231,7 +237,11 @@ impl syn::parse::Parse for NotesParams {
 
         loop {
             let key = content.parse()?;
-            content.parse::<Token![:]>()?;
+            if content.peek(Token![:]) {
+                content.parse::<Token![:]>()?;
+            } else {
+                content.parse::<Token![=]>()?;
+            }
             let value = content.parse()?;
             names.push(key);
             values.push(value);
@@ -242,7 +252,7 @@ impl syn::parse::Parse for NotesParams {
             content.parse::<Token![,]>()?;
         }
 
-        Ok(NotesParams(names, values))
+        Ok(MetadataParams(names, values))
     }
 }
 
