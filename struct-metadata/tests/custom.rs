@@ -1,5 +1,4 @@
 #![cfg(test)]
-#![allow(unused)]
 
 use struct_metadata::{Kind, Described, Descriptor, Entry};
 
@@ -85,6 +84,7 @@ fn dual_vec_featured() {
 
 /// non trivial metadata structs
 #[derive(Described)]
+#[allow(unused)]
 #[metadata_type(Properties)]
 #[metadata(important: true)]
 struct Fields {
@@ -124,6 +124,7 @@ fn fields() {
 
 /// nested structs
 #[derive(Described)]
+#[allow(unused)]
 #[metadata_type(Properties)]
 #[metadata(important: true)]
 struct Nested {
