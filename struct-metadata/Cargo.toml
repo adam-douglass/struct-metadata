@@ -2,6 +2,7 @@
 name = "struct-metadata"
 version = "0.1.0"
 edition = "2021"
+licence = "MIT"
 categories = ["rust-patterns", "config"]
 description = "Macros for attaching metadata to structs."
 
