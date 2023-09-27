@@ -195,7 +195,7 @@ impl<M: Default, Tz: chrono::TimeZone> Described<M> for chrono::DateTime<Tz> {
 }
 
 #[cfg(feature = "serde_json")]
-impl<M: Default, Tz: chrono::TimeZone> Described<M> for serde_json::Value {
+impl<M: Default> Described<M> for serde_json::Value {
     fn metadata() -> Descriptor<M> {
         Descriptor { docs: None, metadata: M::default(), kind: Kind::Any }
     }
