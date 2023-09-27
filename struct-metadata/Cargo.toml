@@ -9,7 +9,6 @@ description = "Macros for attaching metadata to structs."
 [dependencies]
 struct-metadata-derive = { version = "0", path = "../struct-metadata-derive" }
 chrono = { version = "0.4", optional = true }
-serde = { version = "*", features = ["derive"] }
 
 [features]
 default = ["std", "chrono"]
@@ -17,6 +16,6 @@ std = []
 chrono = ["dep:chrono"]
 
 [dev-dependencies]
-struct-metadata = { version = "0", path = "../struct-metadata" }
+serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 strum = { version = "0.25", features = ["derive"] }

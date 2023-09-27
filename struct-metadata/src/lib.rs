@@ -6,7 +6,7 @@
 //! intends to maintain a single source of truth.
 
 #![warn(missing_docs, non_ascii_idents, trivial_numeric_casts,
-    unused_crate_dependencies, noop_method_call, single_use_lifetimes, trivial_casts,
+    noop_method_call, single_use_lifetimes, trivial_casts,
     unused_lifetimes, nonstandard_style, variant_size_differences)]
 #![deny(keyword_idents)]
 #![warn(clippy::missing_docs_in_private_items)]
@@ -16,50 +16,98 @@ pub use struct_metadata_derive::Described;
 
 use std::collections::HashMap;
 
-/// Information about a type along with its metadata and docstrings.
+/// Information about a type along with its metadata and doc-strings.
 #[derive(Debug, PartialEq, Eq)]
 pub struct Descriptor<Metadata: Default> {
+    /// Docstring for the type
     pub docs: Option<Vec<&'static str>>,
+    /// Metadata for the type
     pub metadata: Metadata,
+    /// Details about the type
     pub kind: Kind<Metadata>,
 }
 
+/// Enum reflecting all supported types
 #[derive(Debug, PartialEq, Eq)]
 pub enum Kind<Metadata: Default> {
-    Struct { name: &'static str, children: Vec<Entry<Metadata>>, },
-    Aliased { name: &'static str, kind: Box<Descriptor<Metadata>> },
-    Enum { name: &'static str, variants: Vec<Variant<Metadata>>, },
+    /// The type is a struct
+    Struct {
+        /// Name given to the struct in its declaration
+        name: &'static str,
+        /// List of fields within this struct
+        children: Vec<Entry<Metadata>>,
+    },
+    /// A struct wrapping a single anonymous field
+    Aliased {
+        /// Name given to the struct in its declaration
+        name: &'static str,
+        /// The type this alias struct wraps
+        kind: Box<Descriptor<Metadata>>
+    },
+    /// A simple no-field enum type
+    Enum {
+        /// Name given to the enum in its declaration
+        name: &'static str,
+        /// Information about each variant value within this enum
+        variants: Vec<Variant<Metadata>>,
+    },
+    /// A list of items of a consistent type
     Sequence( Box<Descriptor<Metadata>> ),
+    /// An item which is optionally present
     Option( Box<Descriptor<Metadata>> ),
+    /// A pairwise mapping between consistent types with unique keys
     Mapping( Box<Descriptor<Metadata>>, Box<Descriptor<Metadata>> ),
+    /// A field describing a point in time
     DateTime,
+    /// A string
     String,
+    /// Unsigned 64 bit integer
     U64,
+    /// Signed 64 bit integer
     I64,
+    /// Unsigned 32 bit integer
     U32,
+    /// Signed 32 bit integer
     I32,
+    /// Unsigned 16 bit integer
     U16,
+    /// Signed 16 bit integer
     I16,
+    /// Unsigned 8 bit integer
     U8,
+    /// Signed 8 bit integer
     I8,
+    /// 64 bit floating point number
     F64,
+    /// 32 bit floating point number
     F32,
+    /// A boolean value
     Bool,
 }
 
+/// Struct describing an enum variant
 #[derive(Debug, PartialEq, Eq)]
 pub struct Variant<Metadata: Default> {
+    /// String value used to describe the variant
+    /// This respects strum's renaming policy
     pub label: String,
+    /// doc strings describing this variant
     pub docs: Option<Vec<&'static str>>,
+    /// metadata describing this variant
     pub metadata: Metadata,
 }
 
-
+/// Struct describing a struct field
 #[derive(Debug)]
 pub struct Entry<Metadata: Default> {
+    /// Label of the field in question
+    /// This respects serde's rename attribute
     pub label: &'static str,
+    /// doc string describing this field
     pub docs: Option<Vec<&'static str>>,
+    /// metadata describing this field
     pub metadata: Metadata,
+    /// Type of this field
     pub type_info: Descriptor<Metadata>,
 }
 

@@ -326,6 +326,7 @@ fn _parse_serde_renames(attrs: &[syn::Attribute]) -> SerdeParams {
 /// Helper to parse out the serde attribute
 #[derive(Default)]
 struct SerdeParams {
+    /// Contains new name if this field is renamed
     rename: Option<String>,
     // rename_all: ,
     // rename

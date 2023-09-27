@@ -212,7 +212,6 @@ dependencies = [
  "chrono",
  "serde",
  "serde_json",
- "struct-metadata",
  "struct-metadata-derive",
  "strum",
 ]
