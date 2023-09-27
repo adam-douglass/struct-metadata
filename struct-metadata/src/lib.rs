@@ -83,6 +83,8 @@ pub enum Kind<Metadata: Default> {
     F32,
     /// A boolean value
     Bool,
+    /// A value of unspecified type
+    Any,
 }
 
 /// Struct describing an enum variant
@@ -159,6 +161,11 @@ impl<M: Default, T: Described<M>> Described<M> for Option<T> {
 }
 
 #[cfg(feature = "std")]
+impl<M: Default, T: Described<M>> Described<M> for Box<T> {
+    fn metadata() -> Descriptor<M> { T::metadata() }
+}
+
+#[cfg(feature = "std")]
 impl<M: Default, T: Described<M>> Described<M> for Vec<T> {
     fn metadata() -> Descriptor<M> {
         Descriptor {
@@ -184,5 +191,12 @@ impl<M: Default, K: Described<M> + core::hash::Hash, V: Described<M>> Described<
 impl<M: Default, Tz: chrono::TimeZone> Described<M> for chrono::DateTime<Tz> {
     fn metadata() -> Descriptor<M> {
         Descriptor { docs: None, metadata: M::default(), kind: Kind::DateTime }
+    }
+}
+
+#[cfg(feature = "serde_json")]
+impl<M: Default, Tz: chrono::TimeZone> Described<M> for serde_json::Value {
+    fn metadata() -> Descriptor<M> {
+        Descriptor { docs: None, metadata: M::default(), kind: Kind::Any }
     }
 }

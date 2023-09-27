@@ -207,18 +207,30 @@ dependencies = [
 
 [[package]]
 name = "struct-metadata"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "chrono",
  "serde",
  "serde_json",
- "struct-metadata-derive",
+ "struct-metadata-derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "strum",
 ]
 
 [[package]]
 name = "struct-metadata-derive"
 version = "0.1.0"
+dependencies = [
+ "convert_case",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "struct-metadata-derive"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "608df2e105e2d58a85dd76b69f7920253d6dea317b6a41eff3193ca7c053564f"
 dependencies = [
  "convert_case",
  "proc-macro2",
