@@ -2,7 +2,7 @@
 name = "struct-metadata-derive"
 version = "0.1.0"
 edition = "2021"
-licence = "MIT"
+license = "MIT"
 categories = ["rust-patterns", "config"]
 description = "Derive macro for the struct-metadata package."
 
