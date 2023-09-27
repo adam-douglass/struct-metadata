@@ -19,3 +19,4 @@ chrono = ["dep:chrono"]
 [dev-dependencies]
 struct-metadata = { version = "0", path = "../struct-metadata" }
 serde_json = "*"
+strum = { version = "0.25", features = ["derive"] }

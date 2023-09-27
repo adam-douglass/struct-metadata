@@ -28,13 +28,30 @@ pub struct Descriptor<Metadata: Default> {
 pub enum Kind<Metadata: Default> {
     Struct { name: &'static str, children: Vec<Entry<Metadata>>, },
     Aliased { name: &'static str, kind: Box<Descriptor<Metadata>> },
+    Enum { name: &'static str, variants: Vec<Variant<Metadata>>, },
     Sequence( Box<Descriptor<Metadata>> ),
     Option( Box<Descriptor<Metadata>> ),
     Mapping( Box<Descriptor<Metadata>>, Box<Descriptor<Metadata>> ),
     DateTime,
-    Bool,
-    U64,
     String,
+    U64,
+    I64,
+    U32,
+    I32,
+    U16,
+    I16,
+    U8,
+    I8,
+    F64,
+    F32,
+    Bool,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct Variant<Metadata: Default> {
+    pub label: String,
+    pub docs: Option<Vec<&'static str>>,
+    pub metadata: Metadata,
 }
 
 
@@ -54,27 +71,34 @@ impl<T: PartialEq + Default> PartialEq for Entry<T> {
 
 impl<T: Eq + Default> Eq for Entry<T> {}
 
+/// A self description of the type being targeted including doc-strings and metadata annotations.
 pub trait Described<M: Default=HashMap<&'static str, &'static str>> {
+    /// Get self description of this type
     fn metadata() -> Descriptor<M>;
 }
 
-impl<M: Default> Described<M> for bool {
-    fn metadata() -> Descriptor<M> {
-        Descriptor { docs: None, metadata: M::default(), kind: Kind::Bool }
-    }
+/// Generate the simple formulaic implementation of Described for a basic type
+macro_rules! basic_described {
+    ($type_name:ident, $type_macro:ident) => {
+        impl<M: Default> Described<M> for $type_name {
+            fn metadata() -> Descriptor<M> { Descriptor { docs: None, metadata: M::default(), kind: Kind::$type_macro } }
+        }
+    };
 }
 
-impl<M: Default> Described<M> for u64 {
-    fn metadata() -> Descriptor<M> {
-        Descriptor { docs: None, metadata: M::default(), kind: Kind::U64 }
-    }
-}
+basic_described!{String, String}
+basic_described!{i64, I64}
+basic_described!{u64, U64}
+basic_described!{i32, I32}
+basic_described!{u32, U32}
+basic_described!{i16, I16}
+basic_described!{u16, U16}
+basic_described!{i8, I8}
+basic_described!{u8, U8}
+basic_described!{f64, F64}
+basic_described!{f32, F32}
+basic_described!{bool, Bool}
 
-impl<M: Default> Described<M> for String {
-    fn metadata() -> Descriptor<M> {
-        Descriptor { docs: None, metadata: M::default(), kind: Kind::String }
-    }
-}
 
 impl<M: Default, T: Described<M>> Described<M> for Option<T> {
     fn metadata() -> Descriptor<M> {

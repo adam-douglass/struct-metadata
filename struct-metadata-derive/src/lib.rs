@@ -86,6 +86,49 @@ pub fn derive(input: TokenStream) -> TokenStream {
             output.into()
         }
 
+        syn::Data::Enum(data) => {
+
+            let mut all_variants = vec![];
+
+            for variant in data.variants {
+
+                if !variant.fields.is_empty() {
+                    return syn::Error::new(variant.fields.span(), "Only enums without field values are supported.").into_compile_error().into()
+                }
+
+                let name = variant.ident.clone();
+                let docs = parse_doc_comment(&variant.attrs);
+                let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &variant.attrs);
+
+                let name = quote_spanned!(variant.span() => #ident::#name.to_string());
+
+                all_variants.push(quote!{struct_metadata::Variant::<#metadata_type> {
+                    label: #name,
+                    docs: #docs,
+                    metadata: #metadata,
+                }});
+            }
+
+            let docs = parse_doc_comment(&attrs);
+            let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &attrs);
+            let output = quote! {
+                impl struct_metadata::Described::<#metadata_type> for #ident {
+                    fn metadata() -> struct_metadata::Descriptor::<#metadata_type> {
+                        struct_metadata::Descriptor::<#metadata_type> {
+                            docs: #docs,
+                            kind: struct_metadata::Kind::<#metadata_type>::Enum {
+                                name: stringify!(#ident),
+                                variants: vec![#(#all_variants),*]
+                            },
+                            metadata: #metadata,
+                        }
+                    }
+                }
+            };
+
+            output.into()
+        }
+
         _ => {
             panic!("only structs are supported")
         }
@@ -298,15 +341,14 @@ impl syn::parse::Parse for SerdeParams {
 
         loop {
             let key: syn::Ident = content.parse()?;
-            if content.peek(Token![:]) {
-                content.parse::<Token![:]>()?;
-            } else {
+            if content.peek(Token![=]) {
                 content.parse::<Token![=]>()?;
-            }
-            let value: syn::LitStr = content.parse()?;
 
-            if key == "rename" {
-                out.rename = Some(value.value());
+                let value: syn::LitStr = content.parse()?;
+
+                if key == "rename" {
+                    out.rename = Some(value.value());
+                }
             }
 
             if content.is_empty() {
