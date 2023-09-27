@@ -200,3 +200,14 @@ impl<M: Default> Described<M> for serde_json::Value {
         Descriptor { docs: None, metadata: M::default(), kind: Kind::Any }
     }
 }
+
+#[cfg(feature = "serde_json")]
+impl<M: Default, K: Described<M>, V: Described<M>> Described<M> for serde_json::Map<K, V> {
+    fn metadata() -> Descriptor<M> {
+        Descriptor {
+            docs: None,
+            metadata: M::default(),
+            kind: Kind::Mapping(Box::new(K::metadata()), Box::new(V::metadata()))
+        }
+    }
+}
