@@ -61,6 +61,10 @@ pub enum Kind<Metadata: Default> {
     DateTime,
     /// A string
     String,
+    /// Unsigned 128 bit integer
+    U128,
+    /// Signed 128 bit integer
+    I128,
     /// Unsigned 64 bit integer
     U64,
     /// Signed 64 bit integer
@@ -137,6 +141,8 @@ macro_rules! basic_described {
 }
 
 basic_described!{String, String}
+basic_described!{i128, I128}
+basic_described!{u128, U128}
 basic_described!{i64, I64}
 basic_described!{u64, U64}
 basic_described!{i32, I32}
