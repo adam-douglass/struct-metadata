@@ -6,7 +6,6 @@ license = "MIT"
 categories = ["rust-patterns", "config"]
 description = "Macros for attaching metadata to structs."
 
-
 [dependencies]
 struct-metadata-derive = { version = "0.1.1", path = "../struct-metadata-derive" }
 chrono = { version = "0.4", optional = true }
@@ -21,4 +20,4 @@ serde_json = ["dep:serde_json"]
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-strum = { version = "0.25", features = ["derive"] }
+strum = { version = "0.26", features = ["derive"] }

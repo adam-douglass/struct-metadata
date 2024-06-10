@@ -145,12 +145,35 @@ pub enum Kind<Metadata: Default> {
     Any,
 }
 
-// impl<Metadata: Default> Kind<Metadata> {
-//     pub fn new_struct(name: &'static str, children: Vec<Entry<Metadata>>) -> Self {
-//         for 
-//         Kind::Struct { name, children }
-//     }
-// }
+impl<Metadata: Default> Kind<Metadata> {
+    /// Fetch the name of the type
+    pub fn name(&self) -> &'static str {
+        match self {
+            Kind::Struct { name, .. } => name,
+            Kind::Aliased { name, .. } => name,
+            Kind::Enum { name, .. } => name,
+            Kind::Sequence(_) => "sequence",
+            Kind::Option(_) => "option",
+            Kind::Mapping(_, _) => "mapping",
+            Kind::DateTime => "datetime",
+            Kind::String => "string",
+            Kind::U128 => "u128",
+            Kind::I128 => "i128",
+            Kind::U64 => "u64",
+            Kind::I64 => "i64",
+            Kind::U32 => "u32",
+            Kind::I32 => "i32",
+            Kind::U16 => "u16",
+            Kind::I16 => "i16",
+            Kind::U8 => "u8",
+            Kind::I8 => "i8",
+            Kind::F64 => "f64",
+            Kind::F32 => "f32",
+            Kind::Bool => "bool",
+            Kind::Any => "any",
+        }
+    }
+}
 
 /// Struct describing an enum variant
 #[derive(Debug, PartialEq, Eq)]
