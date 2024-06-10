@@ -1,9 +1,9 @@
 #![cfg(test)]
 
-use struct_metadata::{Kind, Described, Descriptor, Entry};
+use struct_metadata::{Kind, Described, Descriptor, Entry, MetadataKind};
 
 
-#[derive(Default, PartialEq, Eq, Debug)]
+#[derive(Default, PartialEq, Eq, Debug, MetadataKind)]
 struct Properties {
     pub important: bool,
     pub cats: &'static str,

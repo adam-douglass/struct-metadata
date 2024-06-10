@@ -1,13 +1,13 @@
 [package]
 name = "struct-metadata"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 license = "MIT"
 categories = ["rust-patterns", "config"]
 description = "Macros for attaching metadata to structs."
 
 [dependencies]
-struct-metadata-derive = { version = "0.1.0" }
+struct-metadata-derive = { version = "0.1.1", path = "../struct-metadata-derive" }
 chrono = { version = "0.4", optional = true }
 serde_json = { version = "1.0", optional = true }
 

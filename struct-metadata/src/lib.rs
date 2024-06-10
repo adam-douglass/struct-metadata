@@ -12,7 +12,7 @@
 #![warn(clippy::missing_docs_in_private_items)]
 #![allow(clippy::needless_return, clippy::while_let_on_iterator)]
 
-pub use struct_metadata_derive::Described;
+pub use struct_metadata_derive::{Described, MetadataKind};
 
 use std::collections::HashMap;
 
@@ -25,6 +25,60 @@ pub struct Descriptor<Metadata: Default> {
     pub metadata: Metadata,
     /// Details about the type
     pub kind: Kind<Metadata>,
+}
+
+impl<Metadata: MetadataKind> Descriptor<Metadata> {
+    /// A helper method used by the Described derive macro
+    pub fn propagate(&mut self, context: Option<&Metadata> ) {
+        let context = context.unwrap_or(&self.metadata);
+        match &mut self.kind {
+            Kind::Struct { children, .. } => {
+                for child in children {
+                    child.metadata.forward_propagate_entry_defaults(context, &child.type_info.metadata);
+                    child.type_info.propagate(Some(&child.metadata));
+                    child.metadata.backward_propagate_entry_defaults(context, &child.type_info.metadata);
+                }
+            },
+            Kind::Aliased { kind, .. } |
+            Kind::Sequence(kind) | 
+            Kind::Option(kind) => {
+                self.metadata.forward_propagate_child_defaults(&kind.metadata);
+                kind.propagate(Some(&self.metadata));
+                self.metadata.backward_propagate_child_defaults(&kind.metadata);
+            },
+            // Kind::Enum { variants } => {
+                // for child in variants {
+                //     // child.metadata.forward_propagate_entry_defaults(&self.metadata, &child.type_info.metadata);
+                //     // child.type_info.propagate(Some(&child.metadata));
+                //     // child.metadata.backward_propagate_entry_defaults(&self.metadata, &child.type_info.metadata);
+                // }
+            // },
+            Kind::Mapping(key, value) => {
+                self.metadata.forward_propagate_child_defaults(&key.metadata);
+                self.metadata.forward_propagate_child_defaults(&value.metadata);
+                key.propagate(Some(&self.metadata));
+                value.propagate(Some(&self.metadata));
+                self.metadata.backward_propagate_child_defaults(&value.metadata);
+                self.metadata.backward_propagate_child_defaults(&key.metadata);
+
+            },
+            _ => {}
+        }
+    }
+
+    // fn propagate_internal(&mut self, context: &mut Metadata) {
+    //     match &mut self.kind {
+    //         Kind::Struct { name, children } => todo!(),
+    //         Kind::Aliased { name, kind } => todo!(),
+    //         Kind::Enum { name, variants } => todo!(),
+    //         Kind::Sequence(_) => todo!(),
+    //         Kind::Option(kind) => {
+    //             kind.p
+    //         },
+    //         Kind::Mapping(_, _) => todo!(),
+    //         _ => {}
+    //     }
+    // }
 }
 
 /// Enum reflecting all supported types
@@ -247,3 +301,18 @@ impl<M: Default, K: Described<M>, V: Described<M>> Described<M> for serde_json::
         }
     }
 }
+
+/// Trait used to describe metadata field propagation
+pub trait MetadataKind: Default {
+    /// Update metadata values on an entry based on the outer context and inner type data
+    fn forward_propagate_entry_defaults(&mut self, _context: &Self, _kind: &Self) {}
+    /// Update metadata values on an entry based on the outer context and inner type data
+    fn backward_propagate_entry_defaults(&mut self, _context: &Self, _kind: &Self) {}
+    /// Update metadata values on a type entry based on its child type 
+    fn forward_propagate_child_defaults(&mut self, _kind: &Self) {}
+    /// Update metadata values on a type entry based on its child type 
+    fn backward_propagate_child_defaults(&mut self, _kind: &Self) {}
+}
+
+impl<K, V> MetadataKind for HashMap<K, V> {}
+impl<V> MetadataKind for Vec<V> {}

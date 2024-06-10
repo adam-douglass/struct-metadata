@@ -12,6 +12,19 @@ use quote::{quote, quote_spanned, ToTokens};
 use syn::spanned::Spanned;
 use syn::{parse_macro_input, DeriveInput, Token, Ident, LitBool};
 
+/// Derive macro for the MetadataKind trait
+#[proc_macro_derive(MetadataKind)]
+pub fn derive_metadata_kind(input: TokenStream) -> TokenStream {
+    let DeriveInput {ident, ..} = parse_macro_input!(input);
+
+    let output = quote! {
+        impl struct_metadata::MetadataKind for #ident {}
+    };
+
+    output.into()
+
+}
+
 /// Derive macro for the Described trait
 #[proc_macro_derive(Described, attributes(metadata, metadata_type, metadata_sequence, serde))]
 pub fn derive(input: TokenStream) -> TokenStream {
@@ -48,6 +61,8 @@ pub fn derive(input: TokenStream) -> TokenStream {
                         }});
                     }
 
+                    // quote!(struct_metadata::Kind::<#metadata_type>::new_struct(stringify!(#ident), vec![#(#children),*]))
+
                     quote!(struct_metadata::Kind::Struct::<#metadata_type> {
                         name: stringify!(#ident),
                         children: vec![#(#children),*]
@@ -74,11 +89,13 @@ pub fn derive(input: TokenStream) -> TokenStream {
             let output = quote! {
                 impl struct_metadata::Described::<#metadata_type> for #ident {
                     fn metadata() -> struct_metadata::Descriptor::<#metadata_type> {
-                        struct_metadata::Descriptor::<#metadata_type> {
+                        let mut data = struct_metadata::Descriptor::<#metadata_type> {
                             docs: #docs,
                             kind: #kind,
                             metadata: #metadata,
-                        }
+                        };
+                        data.propagate(None);
+                        data
                     }
                 }
             };
