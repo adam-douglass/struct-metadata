@@ -1,6 +1,7 @@
 use struct_metadata::{Described, Descriptor, Variant};
+use struct_metadata_derive::DescribedEnumString;
 
-#[derive(strum::Display, strum::EnumString, Described)]
+#[derive(strum::Display, strum::EnumString, DescribedEnumString)]
 #[strum(serialize_all = "lowercase")]
 pub enum ExtendedScanValues {
     Submitted,

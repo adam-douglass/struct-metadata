@@ -2,7 +2,6 @@
 
 use struct_metadata::{Described, Descriptor, Kind, Entry};
 
-
 /// non trivial metadata structs
 #[derive(Described)]
 #[allow(unused)]

@@ -173,13 +173,23 @@ impl<Metadata: Default> Kind<Metadata> {
             Kind::Any => "any",
         }
     }
+
+    pub fn new_struct(name: &'static str, mut children: Vec<Entry<Metadata>>, flattened_children: &mut [Descriptor<Metadata>]) -> Self {
+        for child in flattened_children {
+            if let Kind::Struct { children: flattening, .. } = &mut child.kind {
+                children.append(flattening)
+            }
+        }
+
+        Self::Struct { name, children }
+    }
 }
 
 /// Struct describing an enum variant
 #[derive(Debug, PartialEq, Eq)]
 pub struct Variant<Metadata: Default> {
-    /// String value used to describe the variant
-    /// This respects strum's renaming policy
+    /// String value used to describe the variant.
+    /// The DescribedEnumString derive can be used to build this label using the to_string method
     pub label: String,
     /// doc strings describing this variant
     pub docs: Option<Vec<&'static str>>,
