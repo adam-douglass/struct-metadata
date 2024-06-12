@@ -83,6 +83,7 @@ impl<Metadata: MetadataKind> Descriptor<Metadata> {
 
 /// Enum reflecting all supported types
 #[derive(Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Kind<Metadata: Default> {
     /// The type is a struct
     Struct {
@@ -174,6 +175,10 @@ impl<Metadata: Default> Kind<Metadata> {
         }
     }
 
+    /// Construct a type descriptor for a struct with the given name and fields.
+    /// 
+    /// Any structs in the flattened_children list will have their fields added to this
+    /// new struct as if they were members of it. (this corresponds to the 'flatten' parameter in serde)
     pub fn new_struct(name: &'static str, mut children: Vec<Entry<Metadata>>, flattened_children: &mut [Descriptor<Metadata>]) -> Self {
         for child in flattened_children {
             if let Kind::Struct { children: flattening, .. } = &mut child.kind {

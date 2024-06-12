@@ -14,10 +14,12 @@ impl MetadataKind for Meta {
     }
 }
 
+
 #[derive(Described)]
 #[metadata_type(Meta)]
 #[allow(unused)]
 struct Test1 {
+    #[metadata()]
     default: String,
     #[metadata(index=true)]
     indexed: String,
@@ -30,6 +32,7 @@ struct Test1 {
 #[metadata(index=true)]
 #[allow(unused)]
 struct Test2 {
+    #[metadata]
     default: String,
     #[metadata(index=true)]
     indexed: String,
@@ -49,7 +52,6 @@ struct Test3 {
     #[metadata(index=false)]
     not_indexed: String,
 }
-
 
 #[test]
 fn test_index_defaults() {

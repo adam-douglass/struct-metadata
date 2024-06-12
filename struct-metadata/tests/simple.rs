@@ -54,6 +54,7 @@ fn empty_doc_b() {
 
 
 #[derive(Described)]
+#[allow(dead_code)]
 struct Single(u64);
 
 #[test]

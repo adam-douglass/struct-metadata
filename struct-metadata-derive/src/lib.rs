@@ -108,6 +108,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
             let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &attrs);
             let output = quote! {
                 impl struct_metadata::Described::<#metadata_type> for #ident {
+                    #[allow(clippy::needless_update)]
                     fn metadata() -> struct_metadata::Descriptor::<#metadata_type> {
                         let mut data = struct_metadata::Descriptor::<#metadata_type> {
                             docs: #docs,
@@ -136,7 +137,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 let name = variant.ident.clone();
                 let docs = parse_doc_comment(&variant.attrs);
                 let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &variant.attrs);
-                let SerdeFieldAttrs {rename, ..} = _parse_serde_field_attrs(&variant.attrs);
+                let SerdeFieldAttrs {rename, flatten: _ } = _parse_serde_field_attrs(&variant.attrs);
 
                 let name = if let Some(name) = rename {
                     quote!(#name)
@@ -416,6 +417,10 @@ impl syn::parse::Parse for MetadataParams {
         let mut values = vec![];
 
         loop {
+            if input.is_empty() {
+                break
+            }
+
             let key = input.parse()?;
             if input.peek(Token![:]) {
                 input.parse::<Token![:]>()?;
@@ -453,6 +458,8 @@ fn _parse_serde_field_attrs(attrs: &[syn::Attribute]) -> SerdeFieldAttrs {
 struct SerdeFieldAttrs {
     /// Contains new name if this field is renamed
     rename: Option<String>,
+    /// should the contents of this attribute be flattened into the parent?
+    /// Only does something if the child is a struct
     flatten: bool,
 }
 
@@ -510,6 +517,7 @@ fn _parse_serde_attrs(attrs: &[syn::Attribute]) -> SerdeAttrs {
 struct SerdeAttrs {
     /// Contains new name if this field is renamed
     rename: Option<String>,
+    /// Rename all of the varients or fields of this container according to the given scheme
     rename_all: Option<convert_case::Case>,
 }
 
