@@ -245,7 +245,7 @@ pub fn derive_enum_string(input: TokenStream) -> TokenStream {
 fn parse_doc_comment(attrs: &[syn::Attribute]) -> proc_macro2::TokenStream {
     let mut lines = vec![];
     for attr in attrs {
-        if attr.style != syn::AttrStyle::Outer {
+        if let syn::AttrStyle::Inner(_) = attr.style {
             continue
         }
 
