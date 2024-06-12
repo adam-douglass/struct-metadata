@@ -1,6 +1,6 @@
 [package]
 name = "struct-metadata-derive"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 categories = ["rust-patterns", "config"]
@@ -14,4 +14,3 @@ proc-macro2 = "1.0"
 quote = "1.0"
 syn = "2.0"
 convert_case = "0.6"
-# serde_derive_internals = "0.29"
