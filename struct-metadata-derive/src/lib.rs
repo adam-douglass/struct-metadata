@@ -24,7 +24,6 @@ pub fn derive_metadata_kind(input: TokenStream) -> TokenStream {
     };
 
     output.into()
-
 }
 
 /// Derive macro for the Described trait
