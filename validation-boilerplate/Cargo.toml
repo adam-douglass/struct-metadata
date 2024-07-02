@@ -1,6 +1,6 @@
 [package]
 name = "validation-boilerplate"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/adam-douglass/struct-metadata/"
@@ -8,7 +8,7 @@ description = "Utility for generating boilerplate for types that require runtime
 readme = "readme.md"
 
 [dependencies]
-validation-boilerplate-derive = { version = "0.1.0", path = "../validation-boilerplate-derive" }
+validation-boilerplate-derive = { version = "1.0.0", path = "../validation-boilerplate-derive" }
 serde = { version = "1.0", features = [] }
 
 [dev-dependencies]

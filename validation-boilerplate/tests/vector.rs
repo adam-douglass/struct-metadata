@@ -6,13 +6,13 @@ struct Config {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct ValidatedType<'a>(&'a str);
+struct ValidatedType(String);
 
-impl<'de> ValidatedDeserialize<'de, Config> for ValidatedType<'de> {
-    type ProxyType = &'de str;
+impl<'de> ValidatedDeserialize<'de, Config> for ValidatedType {
+    type ProxyType = String;
 
     fn validate(input: Self::ProxyType, validator: &Config) -> Result<Self, String> {
-        if validator.valid_strings.contains(input) {
+        if validator.valid_strings.contains(&input) {
             Ok(Self(input))
         } else {
             Err(format!("Invalid value: {input}"))
@@ -22,11 +22,10 @@ impl<'de> ValidatedDeserialize<'de, Config> for ValidatedType<'de> {
 
 #[derive(Debug, ValidatedDeserialize, PartialEq, Eq)]
 #[validated_deserialize(Config)]
-struct Container<'a> {
+struct Container {
     #[validate]
-    config: ValidatedType<'a>,
-    other: &'a str,
-    also: String,
+    config: Vec<ValidatedType>,
+    // pair: Pair,
     normal_data: u64
 }
 
@@ -38,19 +37,15 @@ fn test_load() {
 
     // clean load
     let mut deserializer = serde_json::Deserializer::from_str(r#"{
-        "config": "cats",
-        "other": "dogs",
-        "also": "bird",
+        "config": ["cats", "cats"],
         "normal_data": 10
     }"#);
     let container = Container::deserialize_and_validate(&mut deserializer, &config).unwrap();
-    assert_eq!(container, Container{ config: ValidatedType("cats"), other: "dogs", also: "bird".to_owned(), normal_data: 10 });
+    assert_eq!(container, Container{ config: vec![ValidatedType("cats".to_owned()), ValidatedType("cats".to_owned())], normal_data: 10 });
 
     // refuse during validation
     let mut deserializer = serde_json::Deserializer::from_str(r#"{
-        "config": "dogs",
-        "other": "dogs",
-        "also": "bird",
+        "config": ["cats", "dogs"],
         "normal_data": 10
     }"#);
     assert!(Container::deserialize_and_validate(&mut deserializer, &config).is_err());

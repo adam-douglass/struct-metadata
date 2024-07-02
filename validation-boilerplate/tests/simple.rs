@@ -23,6 +23,7 @@ impl<'de> ValidatedDeserialize<'de, Config> for ValidatedType {
 #[derive(Debug, ValidatedDeserialize, PartialEq, Eq)]
 #[validated_deserialize(Config)]
 struct Container {
+    #[validate]
     config: ValidatedType,
     // pair: Pair,
     normal_data: u64

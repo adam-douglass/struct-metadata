@@ -23,6 +23,7 @@ impl<'de> ValidatedDeserialize<'de, Config> for ValidatedType {
 #[derive(Debug, ValidatedDeserialize, PartialEq, Eq)]
 #[validated_deserialize(Config)]
 struct Container<'a, 'b> {
+    #[validate]
     config: ValidatedType,
     other: &'a str,
     also: &'b str,

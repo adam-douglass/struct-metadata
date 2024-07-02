@@ -22,7 +22,7 @@ impl<'de> ValidatedDeserialize<'de, Config> for ValidatedType<'de> {
 
 #[derive(Debug, ValidatedDeserialize, PartialEq, Eq)]
 #[validated_deserialize(Config)]
-struct Container<'a> (ValidatedType<'a>, &'a str);
+struct Container<'a> (#[validate] ValidatedType<'a>, &'a str);
 
 #[test]
 fn test_load() {

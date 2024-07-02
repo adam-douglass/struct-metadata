@@ -26,13 +26,12 @@ pub trait ValidatedDeserialize<'de, Validator>: Sized {
     }
 }
 
-/// Types that can be deserialized with validation are automatically valid
-impl<'de, T, V> ValidatedDeserialize<'de, V> for T 
-    where T: Deserialize<'de>
+impl<'de, T, V> ValidatedDeserialize<'de, V> for Vec<T>
+    where T: ValidatedDeserialize<'de, V> 
 {
-    type ProxyType = T;
-
-    fn validate(input: Self::ProxyType, _validator: &V) -> Result<Self, String> {
-        Ok(input)
+    type ProxyType = Vec<<T as ValidatedDeserialize<'de, V>>::ProxyType>;
+    
+    fn validate(input: Self::ProxyType, validator: &V) -> Result<Self, String> {
+        input.into_iter().map(|item| T::validate(item, validator)).collect()
     }
 }

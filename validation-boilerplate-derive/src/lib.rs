@@ -9,10 +9,10 @@
 use proc_macro::TokenStream;
 use syn::spanned::Spanned;
 use syn::{parse2, parse_macro_input, Attribute, DeriveInput, Ident};
-use quote::{quote, ToTokens};
+use quote::{quote, quote_spanned, ToTokens};
 
 /// Derive macro for the ValidatedDeserialize trait
-#[proc_macro_derive(ValidatedDeserialize, attributes(validated_deserialize, serde))]
+#[proc_macro_derive(ValidatedDeserialize, attributes(validated_deserialize, validate, serde))]
 pub fn derive_validated_deserialize(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input);
     match _derive_validated_deserialize(input) {
@@ -53,6 +53,7 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
     for (index, field) in data.fields.iter().enumerate() {
 
         // try to pull out a lifetime to use
+        let validate_field = read_validate_field_attr(&field.attrs)?;
         let field_type = &field.ty;
         // let lifetime = if let Type::Reference(typeref) = field_type {
         //     match &typeref.lifetime {
@@ -70,15 +71,25 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
             Some(field_name) => {
                 named_fields = true;
 
-                proxy_fields.push(quote!{
-                    #(#field_serde_attributes)*
-                    #[serde(borrow)]
-                    #field_name: <#field_type as ValidatedDeserialize<#lifetime, #validator>>::ProxyType,
-                });
-        
-                field_conversion.push(quote!{
-                    #field_name: <#field_type as ValidatedDeserialize<'de, #validator>>::validate(input.#field_name, &validator)?,
-                })
+                if validate_field {
+                    proxy_fields.push(quote!{
+                        #(#field_serde_attributes)*
+                        #field_name: <#field_type as ValidatedDeserialize<#lifetime, #validator>>::ProxyType,
+                    });
+            
+                    field_conversion.push(quote!{
+                        #field_name: <#field_type as ValidatedDeserialize<'de, #validator>>::validate(input.#field_name, &validator)?,
+                    })
+                } else {
+                    proxy_fields.push(quote!{
+                        #(#field_serde_attributes)*
+                        #field_name: #field_type,
+                    });
+            
+                    field_conversion.push(quote!{
+                        #field_name: input.#field_name,
+                    })
+                }
             },
             None => {
                 let field_type = &field.ty;
@@ -87,15 +98,27 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
                 }
                 let index = syn::Index::from(index);
 
-                proxy_fields.push(quote!{
-                    #(#field_serde_attributes)*
-                    #[serde(borrow)]
-                    <#field_type as ValidatedDeserialize<#lifetime, #validator>>::ProxyType,
-                });
-        
-                field_conversion.push(quote!{
-                    #index: <#field_type as ValidatedDeserialize<'de, #validator>>::validate(input.#index, &validator)?,
-                })
+                if validate_field {
+                    proxy_fields.push(quote_spanned!{ field_type.span() =>
+                        #(#field_serde_attributes)*
+                        <#field_type as ValidatedDeserialize<#lifetime, #validator>>::ProxyType,
+                    });
+            
+                    field_conversion.push(quote_spanned!{ field_type.span() =>
+                        #(#field_serde_attributes)*
+                        #index: <#field_type as ValidatedDeserialize<'de, #validator>>::validate(input.#index, &validator)?,
+                    })
+                } else {
+                    proxy_fields.push(quote_spanned!{ field_type.span() =>
+                        #(#field_serde_attributes)*
+                        #field_type,
+                    });
+            
+                    field_conversion.push(quote_spanned!{ field_type.span() =>
+                        #(#field_serde_attributes)*
+                        #index: input.#index,
+                    })
+                }
             }
         }
     }
@@ -149,6 +172,17 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
         }
     })
 }
+
+/// Check whether a field has been marked for validation
+fn read_validate_field_attr(attrs: &[Attribute]) -> syn::Result<bool> {
+    for attr in attrs {
+        if attr.path().is_ident("validate") {
+            return Ok(true)
+        }
+    }
+    Ok(false)
+}
+
 
 /// Given a set of struct attributes get the parameters defined for validated_deserialize
 fn read_validated_deserialize_attr(attrs: &[Attribute]) -> syn::Result<ValidatorParameter> {
