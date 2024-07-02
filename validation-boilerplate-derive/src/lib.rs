@@ -164,7 +164,7 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
         impl<'de: #(#lifetimes)+*, #(#limit_lifetimes),*> ValidatedDeserialize<'de, #validator> for #ident <#(#lifetimes),*> {
             type ProxyType = #proxy_type<'de, #(#lifetimes),*>;
 
-            fn validate(input: Self::ProxyType, validator: &#validator) -> Result<Self, String> {
+            fn validate(input: Self::ProxyType, validator: &#validator) -> ::std::result::Result<Self, ::std::string::String> {
                 Ok(Self {
                     #(#field_conversion)*
                 })
