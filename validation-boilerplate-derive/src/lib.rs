@@ -72,21 +72,21 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
                 named_fields = true;
 
                 if validate_field {
-                    proxy_fields.push(quote!{
+                    proxy_fields.push(quote_spanned!{ field_type.span() =>
                         #(#field_serde_attributes)*
                         #field_name: <#field_type as ValidatedDeserialize<#lifetime, #validator>>::ProxyType,
                     });
             
-                    field_conversion.push(quote!{
-                        #field_name: <#field_type as ValidatedDeserialize<'de, #validator>>::validate(input.#field_name, &validator)?,
+                    field_conversion.push(quote_spanned!{ field_type.span() =>
+                        #field_name: <#field_type as ValidatedDeserialize<'de, #validator>>::validate(input.#field_name, validator)?,
                     })
                 } else {
-                    proxy_fields.push(quote!{
+                    proxy_fields.push(quote_spanned!{ field_type.span() =>
                         #(#field_serde_attributes)*
                         #field_name: #field_type,
                     });
             
-                    field_conversion.push(quote!{
+                    field_conversion.push(quote_spanned!{ field_type.span() =>
                         #field_name: input.#field_name,
                     })
                 }
@@ -106,7 +106,7 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
             
                     field_conversion.push(quote_spanned!{ field_type.span() =>
                         #(#field_serde_attributes)*
-                        #index: <#field_type as ValidatedDeserialize<'de, #validator>>::validate(input.#index, &validator)?,
+                        #index: <#field_type as ValidatedDeserialize<'de, #validator>>::validate(input.#index, validator)?,
                     })
                 } else {
                     proxy_fields.push(quote_spanned!{ field_type.span() =>
