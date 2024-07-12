@@ -72,6 +72,7 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
         let field_type = &field.ty;
         let field_lifetimes = extract_lifetimes(field_type);
         let field_lifetime = field_lifetimes.first().map(|life| life.to_token_stream()).unwrap_or(quote!('static));
+        let visibility = &field.vis;
 
         // create the field for the proxy type that inherits all the serde parameters
         let field_serde_attributes = select_serde_attributes(&field.attrs);
@@ -83,7 +84,7 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
                 if validate_field {
                     proxy_fields.push(quote_spanned!{ field_type.span() =>
                         #(#field_serde_attributes)*
-                        #field_name: <#field_type as ValidatedDeserialize<#field_lifetime, #validator>>::ProxyType,
+                        #visibility #field_name: <#field_type as ValidatedDeserialize<#field_lifetime, #validator>>::ProxyType,
                     });
             
                     field_conversion.push(quote_spanned!{ field_type.span() =>
@@ -92,7 +93,7 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
                 } else {
                     proxy_fields.push(quote_spanned!{ field_type.span() =>
                         #(#field_serde_attributes)*
-                        #field_name: #field_type,
+                        #visibility #field_name: #field_type,
                     });
             
                     field_conversion.push(quote_spanned!{ field_type.span() =>
@@ -110,7 +111,7 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
                 if validate_field {
                     proxy_fields.push(quote_spanned!{ field_type.span() =>
                         #(#field_serde_attributes)*
-                        <#field_type as ValidatedDeserialize<#field_lifetime, #validator>>::ProxyType,
+                        #visibility <#field_type as ValidatedDeserialize<#field_lifetime, #validator>>::ProxyType,
                     });
             
                     field_conversion.push(quote_spanned!{ field_type.span() =>
@@ -120,7 +121,7 @@ fn _derive_validated_deserialize(input: DeriveInput) -> syn::Result<proc_macro2:
                 } else {
                     proxy_fields.push(quote_spanned!{ field_type.span() =>
                         #(#field_serde_attributes)*
-                        #field_type,
+                        #visibility #field_type,
                     });
             
                     field_conversion.push(quote_spanned!{ field_type.span() =>
