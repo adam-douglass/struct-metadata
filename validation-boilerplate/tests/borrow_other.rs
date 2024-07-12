@@ -30,6 +30,14 @@ struct Container<'a, 'b> {
     normal_data: u64
 }
 
+/// make sure both the container and unvalidated container have the same lifetime constraints
+#[allow(dead_code)]
+struct TestLifetimesSame<'a, 'b> {
+    a: Container<'a, 'b>,
+    b: ContainerUnvalidated<'a, 'b>,
+}
+
+
 #[test]
 fn test_load() {
     let config = Config{

@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use serde::Deserialize;
 use validation_boilerplate::ValidatedDeserialize;
 
 struct Config {
@@ -21,12 +22,19 @@ impl<'de> ValidatedDeserialize<'de, Config> for ValidatedType {
 }
 
 #[derive(Debug, ValidatedDeserialize, PartialEq, Eq)]
-#[validated_deserialize(Config)]
+#[validated_deserialize(Config, derive=(Debug, PartialEq, Eq))]
 struct Container {
     #[validate]
     config: ValidatedType,
     // pair: Pair,
     normal_data: u64
+}
+
+/// make sure both the container and unvalidated container have the same lifetime constraints
+#[allow(dead_code)]
+struct TestLifetimesSame {
+    a: Container,
+    b: ContainerUnvalidated,
 }
 
 #[test]
@@ -50,4 +58,11 @@ fn test_load() {
     }"#);
     assert!(Container::deserialize_and_validate(&mut deserializer, &config).is_err());
 
+    // Load without validation
+    let mut deserializer = serde_json::Deserializer::from_str(r#"{
+        "config": "dogs",
+        "normal_data": 10
+    }"#);
+    let loaded = ContainerUnvalidated::deserialize(&mut deserializer).unwrap();
+    assert_eq!(loaded, ContainerUnvalidated{config: "dogs".to_owned(), normal_data: 10});
 }
