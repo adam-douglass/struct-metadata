@@ -8,6 +8,12 @@ struct Config {
 #[derive(Debug, PartialEq, Eq)]
 struct ValidatedType(String);
 
+impl From<ValidatedType> for String {
+    fn from(val: ValidatedType) -> Self {
+        val.0
+    }
+}
+
 impl<'de> ValidatedDeserialize<'de, Config> for ValidatedType {
     type ProxyType = String;
 
@@ -23,7 +29,7 @@ impl<'de> ValidatedDeserialize<'de, Config> for ValidatedType {
 #[derive(Debug, ValidatedDeserialize, PartialEq, Eq)]
 #[validated_deserialize(Config)]
 struct Container {
-    #[validate]
+    #[validate_iterator]
     config: Vec<ValidatedType>,
     // pair: Pair,
     normal_data: u64

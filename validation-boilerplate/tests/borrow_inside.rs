@@ -8,6 +8,13 @@ struct Config {
 #[derive(Debug, PartialEq, Eq)]
 struct ValidatedType<'a>(&'a str);
 
+
+impl<'a> From<ValidatedType<'a>> for &'a str {
+    fn from(val: ValidatedType<'a>) -> Self {
+        val.0
+    }
+}
+
 impl<'de> ValidatedDeserialize<'de, Config> for ValidatedType<'de> {
     type ProxyType = &'de str;
 
