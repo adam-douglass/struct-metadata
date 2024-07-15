@@ -27,7 +27,7 @@ pub trait ValidatedDeserialize<'de, Validator>: Sized {
 }
 
 impl<'de, T, V> ValidatedDeserialize<'de, V> for Vec<T>
-    where T: ValidatedDeserialize<'de, V> 
+    where T: ValidatedDeserialize<'de, V>
 {
     type ProxyType = Vec<<T as ValidatedDeserialize<'de, V>>::ProxyType>;
     
