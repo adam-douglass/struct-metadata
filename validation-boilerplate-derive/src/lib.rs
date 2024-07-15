@@ -8,7 +8,7 @@
 
 use proc_macro::TokenStream;
 use syn::spanned::Spanned;
-use syn::{parenthesized, parse2, parse_macro_input, Attribute, DeriveInput, Ident, Token};
+use syn::{parenthesized, parse2, parse_macro_input, Attribute, DeriveInput, Ident, Path, Token};
 use quote::{quote, quote_spanned, ToTokens};
 
 /// Derive macro for the ValidatedDeserialize trait
@@ -264,7 +264,7 @@ struct ValidatorParameter {
     temporary_name: Option<Ident>,
 
     /// Derives to be added to the temporary type
-    derives: Vec<Ident>,
+    derives: Vec<Path>,
 }
 
 impl syn::parse::Parse for ValidatorParameter {
@@ -279,7 +279,7 @@ impl syn::parse::Parse for ValidatorParameter {
             if arg_name == "derive" {
                 let content;
                 parenthesized!(content in input);
-                derives = content.parse_terminated(Ident::parse, Token![,])?.into_iter().collect();
+                derives = content.parse_terminated(Path::parse, Token![,])?.into_iter().collect();
             } else if arg_name == "name" {
                 temporary_name = Some(input.parse()?);
             } else {
