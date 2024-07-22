@@ -258,7 +258,7 @@ fn read_validated_deserialize_attr(attrs: &[Attribute]) -> syn::Result<Validator
 /// Parameterization of the ValidatedDeserialize macro
 struct ValidatorParameter {
     /// What type will be passed as a validator
-    validator_name: Ident,
+    validator_name: syn::Type,
 
     /// Name given to the temporary type
     temporary_name: Option<Ident>,
@@ -269,7 +269,7 @@ struct ValidatorParameter {
 
 impl syn::parse::Parse for ValidatorParameter {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let validator_name: Ident = input.parse()?;
+        let validator_name: syn::Type = input.parse()?;
         let mut derives = vec![];
         let mut temporary_name = None;
 
