@@ -3,6 +3,4 @@ resolver = "2"
 members = [
     "struct-metadata",
     "struct-metadata-derive", 
-    "validation-boilerplate", 
-    "validation-boilerplate-derive",
 ]
