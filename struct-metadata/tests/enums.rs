@@ -19,10 +19,10 @@ fn enum_display() {
         kind: struct_metadata::Kind::Enum {
             name: "ExtendedScanValues",
             variants: vec![
-                Variant{ label: "submitted".to_owned(), docs: None, metadata: Default::default() },
-                Variant{ label: "skipped".to_owned(), docs: None, metadata: Default::default() },
-                Variant{ label: "incomplete".to_owned(), docs: None, metadata: Default::default() },
-                Variant{ label: "complete".to_owned(), docs: None, metadata: [("ideal", "true")].into_iter().collect() },
+                Variant{ label: "submitted", docs: None, metadata: Default::default(), aliases: &["submitted"] },
+                Variant{ label: "skipped", docs: None, metadata: Default::default(), aliases: &["skipped"] },
+                Variant{ label: "incomplete", docs: None, metadata: Default::default(), aliases: &["incomplete"] },
+                Variant{ label: "complete", docs: None, metadata: [("ideal", "true")].into_iter().collect(), aliases: &["complete"] },
             ]
         }
     })

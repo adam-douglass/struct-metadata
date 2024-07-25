@@ -20,7 +20,7 @@ fn rename_field() {
         kind: Kind::Struct {
             name: "RenameFieldTestType",
             children: vec![
-                Entry { label: "type", docs: None, has_default: false, metadata: Default::default(), type_info: String::metadata() }
+                Entry { label: "type", docs: None, has_default: false, metadata: Default::default(), type_info: String::metadata(), aliases: &["type"] }
             ]
         }
     });
@@ -29,7 +29,7 @@ fn rename_field() {
 #[derive(Serialize, Deserialize, Described, Debug)]
 #[allow(dead_code)]
 enum RenameVarient {
-    #[serde(rename = "type")]
+    #[serde(rename = "type", alias="kind")]
     Type,
 }
 
@@ -41,7 +41,7 @@ fn rename_variant() {
         kind: struct_metadata::Kind::Enum {
             name: "RenameVarient",
             variants: vec![
-                Variant{ label: "type".to_owned(), docs: None, metadata: Default::default() },
+                Variant{ label: "type", docs: None, metadata: Default::default(), aliases: &["type", "kind"] },
             ]
         }
     })
@@ -63,7 +63,7 @@ fn rename_all_varients() {
         kind: struct_metadata::Kind::Enum {
             name: "OuterName",
             variants: vec![
-                Variant{ label: "TYPE".to_owned(), docs: None, metadata: Default::default() },
+                Variant{ label: "TYPE", docs: None, metadata: Default::default(), aliases: &["TYPE"] },
             ]
         }
     })
@@ -83,7 +83,7 @@ fn rename_all_fields() {
         kind: Kind::Struct {
             name: "RenameAllField",
             children: vec![
-                Entry { label: "inner", docs: None, has_default: false, metadata: Default::default(), type_info: u8::metadata() }
+                Entry { label: "inner", docs: None, has_default: false, metadata: Default::default(), type_info: u8::metadata(), aliases: &["inner"] }
             ]
         }
     });

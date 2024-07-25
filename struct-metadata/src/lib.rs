@@ -195,11 +195,13 @@ impl<Metadata: Default> Kind<Metadata> {
 pub struct Variant<Metadata: Default> {
     /// String value used to describe the variant.
     /// The DescribedEnumString derive can be used to build this label using the to_string method
-    pub label: String,
+    pub label: &'static str,
     /// doc strings describing this variant
     pub docs: Option<Vec<&'static str>>,
     /// metadata describing this variant
     pub metadata: Metadata,
+    /// List of names this field may be known as
+    pub aliases: &'static [&'static str]
 }
 
 /// Struct describing a struct field
@@ -216,6 +218,8 @@ pub struct Entry<Metadata: Default> {
     pub type_info: Descriptor<Metadata>,
     /// Wether this field has a default defined
     pub has_default: bool,
+    /// List of names this field may be known as
+    pub aliases: &'static [&'static str]
 }
 
 impl<T: PartialEq + Default> PartialEq for Entry<T> {

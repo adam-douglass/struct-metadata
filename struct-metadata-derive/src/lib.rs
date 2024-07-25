@@ -49,7 +49,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                     let mut flattened_children = vec![];
 
                     for field in &fields.named {
-                        let SerdeFieldAttrs {rename, flatten, mut has_default } = _parse_serde_field_attrs(&field.attrs);
+                        let SerdeFieldAttrs {rename, flatten, mut has_default, mut aliases } = _parse_serde_field_attrs(&field.attrs);
                         has_default |= serde_attrs.has_default;
                         let name = field.ident.clone().unwrap();
                         let ty = &field.ty;
@@ -63,11 +63,14 @@ pub fn derive(input: TokenStream) -> TokenStream {
                         let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &field.attrs);
 
                         let name = if let Some(rename) = rename {
+                            aliases.insert(0, rename.clone());
                             quote!(#rename)
                         } else if let Some(case) = serde_attrs.rename_all {
                             let new_name = name.to_string().to_case(case);
+                            aliases.insert(0, new_name.clone());
                             quote!(#new_name)
                         } else {
+                            aliases.insert(0, name.to_string());
                             quote!(stringify!(#name))
                         };
 
@@ -76,7 +79,8 @@ pub fn derive(input: TokenStream) -> TokenStream {
                             docs: #docs,
                             metadata: #metadata,
                             type_info: #ty,
-                            has_default: #has_default
+                            has_default: #has_default,
+                            aliases: &[#(#aliases),*]
                         }});
                     }
 
@@ -138,21 +142,25 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 let name = variant.ident.clone();
                 let docs = parse_doc_comment(&variant.attrs);
                 let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &variant.attrs);
-                let SerdeFieldAttrs {rename, flatten: _, has_default: _ } = _parse_serde_field_attrs(&variant.attrs);
+                let SerdeFieldAttrs {rename, flatten: _, has_default: _, mut aliases } = _parse_serde_field_attrs(&variant.attrs);
 
                 let name = if let Some(name) = rename {
+                    aliases.insert(0, name.clone());
                     quote!(#name)
                 } else if let Some(case) = serde_attrs.rename_all {
                     let new_name = name.to_string().to_case(case);
+                    aliases.insert(0, new_name.clone());
                     quote!(#new_name)
                 } else {
+                    aliases.insert(0, name.to_string());
                     quote_spanned!(variant.span() => stringify!(#name))
                 };
 
                 all_variants.push(quote!{struct_metadata::Variant::<#metadata_type> {
-                    label: #name.to_owned(),
+                    label: #name,
                     docs: #docs,
                     metadata: #metadata,
+                    aliases: &[#(#aliases),*]
                 }});
             }
 
@@ -184,11 +192,12 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
 /// Derive macro for the Described trait for enums where the varient labels provided should come
 /// from the to_string method rather than raw varient names
-#[proc_macro_derive(DescribedEnumString, attributes(metadata, metadata_type, metadata_sequence, serde))]
+#[proc_macro_derive(DescribedEnumString, attributes(metadata, metadata_type, metadata_sequence, serde, strum))]
 pub fn derive_enum_string(input: TokenStream) -> TokenStream {
     let DeriveInput {ident, attrs, data, ..} = parse_macro_input!(input);
 
     let metadata_type = parse_metadata_type(&attrs);
+    let strum_attr = _parse_strum_attrs(&attrs);
 
     match data {
         syn::Data::Enum(data) => {
@@ -205,12 +214,22 @@ pub fn derive_enum_string(input: TokenStream) -> TokenStream {
                 let docs = parse_doc_comment(&variant.attrs);
                 let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &variant.attrs);
 
-                let name = quote_spanned!(variant.span() => #ident::#name.to_string());
+                // let name: proc_macro2::TokenStream = quote_spanned!(variant.span() => stringify!(#name));
+                let name = match strum_attr.serialize_all {
+                    Some(case) => {
+                        let new_name = name.to_string().to_case(case);
+                        quote!(#new_name)
+                    },
+                    None => {
+                        quote!(#name)
+                    },
+                };
 
                 all_variants.push(quote!{struct_metadata::Variant::<#metadata_type> {
                     label: #name,
                     docs: #docs,
                     metadata: #metadata,
+                    aliases: &[#name]
                 }});
             }
 
@@ -464,6 +483,8 @@ struct SerdeFieldAttrs {
     flatten: bool,
     /// has a default been defined on this field
     has_default: bool,
+    /// other names a field might be labled under
+    aliases: Vec<String>
 }
 
 impl syn::parse::Parse for SerdeFieldAttrs {
@@ -484,6 +505,10 @@ impl syn::parse::Parse for SerdeFieldAttrs {
 
                 if key == "rename" {
                     out.rename = Some(value.value());
+                }
+
+                if key == "alias" {
+                    out.aliases.push(value.value());
                 }
             }
 
@@ -568,6 +593,58 @@ impl syn::parse::Parse for SerdeAttrs {
         Ok(out)
     }
 }
+
+
+/// Parse metadata type if its a struct
+fn _parse_strum_attrs(attrs: &[syn::Attribute]) -> StrumAttrs {
+    for attr in attrs {
+        if let syn::Meta::List(meta) = &attr.meta {
+            if meta.path.is_ident("strum") {
+                return syn::parse2(meta.tokens.clone()).expect("Invalid strum");
+            }
+        }
+    }
+    Default::default()
+}
+
+/// Helper to parse out the serde attribute
+#[derive(Default)]
+struct StrumAttrs {
+    /// Rename all of the varients or fields of this container according to the given scheme
+    serialize_all: Option<convert_case::Case>,
+}
+
+impl syn::parse::Parse for StrumAttrs {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        // let content;
+        // syn::parenthesized!(content in input);
+
+        let mut out = StrumAttrs::default();
+        // let mut names: Vec<syn::Ident> = vec![];
+        // let mut values: Vec<syn::Expr> = vec![];
+
+        loop {
+            let key: syn::Ident = input.parse()?;
+            if input.peek(Token![=]) {
+                input.parse::<Token![=]>()?;
+
+                let value: syn::LitStr = input.parse()?;
+
+                if key == "serialize_all" {
+                    out.serialize_all = Some(fetch_case(&value)?);
+                }
+            }
+
+            if input.is_empty() {
+                break
+            }
+            input.parse::<Token![,]>()?;
+        }
+
+        Ok(out)
+    }
+}
+
 
 /// Determine the case conversion scheme for a given name
 fn fetch_case(name: &syn::LitStr) -> syn::Result<convert_case::Case> {

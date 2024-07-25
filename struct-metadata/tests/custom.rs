@@ -107,9 +107,9 @@ fn expected_fields_metadata() -> Descriptor<Properties> {
         kind: Kind::Struct {
             name: "Fields",
             children: vec![
-                Entry { label: "label", docs: Some(vec!["Name used"]), has_default: false, metadata: Default::default(), type_info: u64::metadata() },
-                Entry { label: "description", docs: None, has_default: false, metadata: Properties { cats: "fluffy", ..Default::default() }, type_info: String::metadata() },
-                Entry { label: "cats", docs: Some(vec!["Are cats allowed here?"]), has_default: false, metadata: Properties { important: true, cats: "" }, type_info: bool::metadata() },
+                Entry { label: "label", docs: Some(vec!["Name used"]), has_default: false, metadata: Default::default(), type_info: u64::metadata(), aliases: &["label"] },
+                Entry { label: "description", docs: None, has_default: false, metadata: Properties { cats: "fluffy", ..Default::default() }, type_info: String::metadata(), aliases: &["description"] },
+                Entry { label: "cats", docs: Some(vec!["Are cats allowed here?"]), has_default: false, metadata: Properties { important: true, cats: "" }, type_info: bool::metadata(), aliases: &["cats"] },
             ]
         }
     }
@@ -143,8 +143,8 @@ fn nested() {
         kind: Kind::Struct {
             name: "Nested",
             children: vec![
-                Entry { label: "label", docs: Some(vec!["Name used"]), has_default: false, metadata: Default::default(), type_info: u64::metadata() },
-                Entry { label: "data", docs: None, has_default: false, metadata: Properties { cats: "with stripes", ..Default::default() }, type_info: expected_fields_metadata() },
+                Entry { label: "label", docs: Some(vec!["Name used"]), has_default: false, metadata: Default::default(), type_info: u64::metadata(), aliases: &["label"] },
+                Entry { label: "data", docs: None, has_default: false, metadata: Properties { cats: "with stripes", ..Default::default() }, type_info: expected_fields_metadata(), aliases: &["data"] },
             ]
         }
     });
