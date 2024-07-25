@@ -110,8 +110,8 @@ fn simple_fields() {
     assert_eq!(data.docs, None);
     assert_eq!(data.metadata, [("important", "true")].into_iter().collect());
     assert_eq!(data.kind, Kind::Struct{ name: "SimpleFields", children: vec![
-        Entry { label: "label", docs: Some(vec!["Name used"]), metadata: Default::default(), type_info: u64::metadata() },
-        Entry { label: "description", docs: None, metadata: [("text", "true")].into_iter().collect(), type_info: String::metadata() },
-        Entry { label: "cats", docs: Some(vec!["Are cats allowed here?"]), metadata: [("important", "true")].into_iter().collect(), type_info: bool::metadata() },
+        Entry { label: "label", docs: Some(vec!["Name used"]), has_default: false, metadata: Default::default(), type_info: u64::metadata() },
+        Entry { label: "description", docs: None, has_default: false, metadata: [("text", "true")].into_iter().collect(), type_info: String::metadata() },
+        Entry { label: "cats", docs: Some(vec!["Are cats allowed here?"]), has_default: false, metadata: [("important", "true")].into_iter().collect(), type_info: bool::metadata() },
     ]});
 }

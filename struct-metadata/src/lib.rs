@@ -214,11 +214,13 @@ pub struct Entry<Metadata: Default> {
     pub metadata: Metadata,
     /// Type of this field
     pub type_info: Descriptor<Metadata>,
+    /// Wether this field has a default defined
+    pub has_default: bool,
 }
 
 impl<T: PartialEq + Default> PartialEq for Entry<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.label == other.label && self.docs == other.docs && self.metadata == other.metadata && self.type_info == other.type_info
+        self.label == other.label && self.docs == other.docs && self.metadata == other.metadata && self.type_info == other.type_info && self.has_default == other.has_default
     }
 }
 

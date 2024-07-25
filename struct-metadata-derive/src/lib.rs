@@ -49,7 +49,8 @@ pub fn derive(input: TokenStream) -> TokenStream {
                     let mut flattened_children = vec![];
 
                     for field in &fields.named {
-                        let SerdeFieldAttrs {rename, flatten } = _parse_serde_field_attrs(&field.attrs);
+                        let SerdeFieldAttrs {rename, flatten, mut has_default } = _parse_serde_field_attrs(&field.attrs);
+                        has_default |= serde_attrs.has_default;
                         let name = field.ident.clone().unwrap();
                         let ty = &field.ty;
                         if flatten {
@@ -74,7 +75,8 @@ pub fn derive(input: TokenStream) -> TokenStream {
                             label: #name,
                             docs: #docs,
                             metadata: #metadata,
-                            type_info: #ty
+                            type_info: #ty,
+                            has_default: #has_default
                         }});
                     }
 
@@ -136,7 +138,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 let name = variant.ident.clone();
                 let docs = parse_doc_comment(&variant.attrs);
                 let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &variant.attrs);
-                let SerdeFieldAttrs {rename, flatten: _ } = _parse_serde_field_attrs(&variant.attrs);
+                let SerdeFieldAttrs {rename, flatten: _, has_default: _ } = _parse_serde_field_attrs(&variant.attrs);
 
                 let name = if let Some(name) = rename {
                     quote!(#name)
@@ -460,6 +462,8 @@ struct SerdeFieldAttrs {
     /// should the contents of this attribute be flattened into the parent?
     /// Only does something if the child is a struct
     flatten: bool,
+    /// has a default been defined on this field
+    has_default: bool,
 }
 
 impl syn::parse::Parse for SerdeFieldAttrs {
@@ -481,6 +485,10 @@ impl syn::parse::Parse for SerdeFieldAttrs {
                 if key == "rename" {
                     out.rename = Some(value.value());
                 }
+            }
+
+            if key == "default" {
+                out.has_default = true;
             }
 
             if key == "flatten" {
@@ -518,6 +526,8 @@ struct SerdeAttrs {
     rename: Option<String>,
     /// Rename all of the varients or fields of this container according to the given scheme
     rename_all: Option<convert_case::Case>,
+    /// should all the fields have a default inserted from the struct default
+    has_default: bool,
 }
 
 impl syn::parse::Parse for SerdeAttrs {
@@ -543,6 +553,10 @@ impl syn::parse::Parse for SerdeAttrs {
                 if key == "rename_all" {
                     out.rename_all = Some(fetch_case(&value)?);
                 }
+            }
+
+            if key == "default" {
+                out.has_default = true;
             }
 
             if input.is_empty() {

@@ -25,9 +25,9 @@ fn option_vec() {
         kind: Kind::Struct {
             name: "OptionVec",
             children: vec![
-                Entry { label: "label", docs: Some(vec!["Name used"]), metadata: Default::default(), type_info: Descriptor { docs: None, metadata: Default::default(), kind: Kind::Option(Box::new(String::metadata())) } },
-                Entry { label: "score", docs: None, metadata: [("active", "true")].into_iter().collect(), type_info: Descriptor { docs: None, metadata: Default::default(), kind: Kind::Option(Box::new(u64::metadata())) } },
-                Entry { label: "attached", docs: None, metadata: [("active", "false")].into_iter().collect(), type_info: Descriptor { docs: None, metadata: Default::default(), kind: Kind::Sequence(Box::new(u64::metadata())) }  },
+                Entry { label: "label", docs: Some(vec!["Name used"]), metadata: Default::default(), has_default: false, type_info: Descriptor { docs: None, metadata: Default::default(), kind: Kind::Option(Box::new(String::metadata())) } },
+                Entry { label: "score", docs: None, metadata: [("active", "true")].into_iter().collect(), has_default: false, type_info: Descriptor { docs: None, metadata: Default::default(), kind: Kind::Option(Box::new(u64::metadata())) } },
+                Entry { label: "attached", docs: None, metadata: [("active", "false")].into_iter().collect(), has_default: false, type_info: Descriptor { docs: None, metadata: Default::default(), kind: Kind::Sequence(Box::new(u64::metadata())) }  },
             ]
         }
     });

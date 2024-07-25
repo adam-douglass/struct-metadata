@@ -20,7 +20,7 @@ fn rename_field() {
         kind: Kind::Struct {
             name: "RenameFieldTestType",
             children: vec![
-                Entry { label: "type", docs: None, metadata: Default::default(), type_info: String::metadata() }
+                Entry { label: "type", docs: None, has_default: false, metadata: Default::default(), type_info: String::metadata() }
             ]
         }
     });
@@ -83,7 +83,7 @@ fn rename_all_fields() {
         kind: Kind::Struct {
             name: "RenameAllField",
             children: vec![
-                Entry { label: "inner", docs: None, metadata: Default::default(), type_info: u8::metadata() }
+                Entry { label: "inner", docs: None, has_default: false, metadata: Default::default(), type_info: u8::metadata() }
             ]
         }
     });

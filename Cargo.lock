@@ -204,7 +204,7 @@ dependencies = [
 
 [[package]]
 name = "struct-metadata"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "chrono",
  "serde",
@@ -215,7 +215,7 @@ dependencies = [
 
 [[package]]
 name = "struct-metadata-derive"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "convert_case",
  "proc-macro2",
