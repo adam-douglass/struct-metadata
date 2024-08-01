@@ -1,6 +1,6 @@
 [package]
 name = "struct-metadata"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 license = "MIT"
 categories = ["rust-patterns", "config"]
@@ -21,3 +21,4 @@ serde_json = ["dep:serde_json"]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 strum = { version = "0.26", features = ["derive"] }
+pretty_assertions = { version= "1.4" }

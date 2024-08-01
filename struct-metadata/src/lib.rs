@@ -17,7 +17,7 @@ pub use struct_metadata_derive::{Described, MetadataKind};
 use std::collections::HashMap;
 
 /// Information about a type along with its metadata and doc-strings.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Descriptor<Metadata: Default> {
     /// Docstring for the type
     pub docs: Option<Vec<&'static str>>,
@@ -82,7 +82,7 @@ impl<Metadata: MetadataKind> Descriptor<Metadata> {
 }
 
 /// Enum reflecting all supported types
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[non_exhaustive]
 pub enum Kind<Metadata: Default> {
     /// The type is a struct
@@ -142,6 +142,8 @@ pub enum Kind<Metadata: Default> {
     F32,
     /// A boolean value
     Bool,
+    /// A value of unspecified type, that must be limited to json
+    JSON,
     /// A value of unspecified type
     Any,
 }
@@ -171,6 +173,7 @@ impl<Metadata: Default> Kind<Metadata> {
             Kind::F64 => "f64",
             Kind::F32 => "f32",
             Kind::Bool => "bool",
+            Kind::JSON => "json",
             Kind::Any => "any",
         }
     }
@@ -191,7 +194,7 @@ impl<Metadata: Default> Kind<Metadata> {
 }
 
 /// Struct describing an enum variant
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Variant<Metadata: Default> {
     /// String value used to describe the variant.
     /// The DescribedEnumString derive can be used to build this label using the to_string method
@@ -205,7 +208,7 @@ pub struct Variant<Metadata: Default> {
 }
 
 /// Struct describing a struct field
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Entry<Metadata: Default> {
     /// Label of the field in question
     /// This respects serde's rename attribute
@@ -308,7 +311,7 @@ impl<M: Default, Tz: chrono::TimeZone> Described<M> for chrono::DateTime<Tz> {
 #[cfg(feature = "serde_json")]
 impl<M: Default> Described<M> for serde_json::Value {
     fn metadata() -> Descriptor<M> {
-        Descriptor { docs: None, metadata: M::default(), kind: Kind::Any }
+        Descriptor { docs: None, metadata: M::default(), kind: Kind::JSON }
     }
 }
 

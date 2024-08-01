@@ -1,9 +1,11 @@
 #![cfg(test)]
 
+use pretty_assertions::assert_eq;
+
 use struct_metadata::{Kind, Described, Descriptor, Entry, MetadataKind};
 
 
-#[derive(Default, PartialEq, Eq, Debug, MetadataKind)]
+#[derive(Default, PartialEq, Eq, Debug, MetadataKind, Clone)]
 struct Properties {
     pub important: bool,
     pub cats: &'static str,
@@ -121,7 +123,6 @@ fn fields() {
 }
 
 
-
 /// nested structs
 #[derive(Described)]
 #[allow(unused)]
@@ -149,4 +150,50 @@ fn nested() {
         }
     });
 }
+
+
+// #[derive(Described)]
+// #[allow(unused)]
+// #[metadata_type(Properties)]
+// #[metadata(important: true)]
+// struct Newtype(u64);
+
+
+// #[derive(Described)]
+// #[allow(unused)]
+// #[metadata_type(Properties)]
+// struct UseNewtype {
+//     data: Newtype,
+//     odata: Option<Newtype>,
+// }
+
+// #[test]
+// fn newtype() {
+
+//     let newtype_kind = Kind::Aliased { name: "Newtype", kind: Box::new(u64::metadata()) };
+
+//     let newtype = Descriptor {
+//         docs: None,
+//         metadata: Properties { important: true, cats: "" },
+//         kind: newtype_kind.clone(),
+//     };
+    
+//     let newtype_option = Descriptor {
+//         docs: None,
+//         metadata: Properties { important: true, cats: "" },
+//         kind: Kind::Option(Box::new(newtype.clone())),
+//     };
+
+//     assert_eq!(UseNewtype::metadata(), Descriptor{
+//         docs: None,
+//         metadata: Default::default(),
+//         kind: Kind::Struct {
+//             name: "UseNewtype",
+//             children: vec![
+//                 Entry { label: "data", docs: None, has_default: false, metadata: Properties { important: true, ..Default::default() }, type_info: newtype, aliases: &["data"] },
+//                 Entry { label: "odata", docs: None, has_default: false, metadata: Properties { important: true, ..Default::default() }, type_info: newtype_option, aliases: &["odata"] },
+//             ]
+//         }
+//     });
+// }
 

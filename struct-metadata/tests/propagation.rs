@@ -25,6 +25,12 @@ struct Test1 {
     indexed: String,
     #[metadata(index=false)]
     not_indexed: String,
+    #[metadata()]
+    odefault: Option<String>,
+    #[metadata(index=true)]
+    oindexed: Option<String>,
+    #[metadata(index=false)]
+    onot_indexed: Option<String>,
 }
 
 #[derive(Described)]
@@ -62,6 +68,9 @@ fn test_index_defaults() {
     assert_eq!(children[0].metadata, Meta{ index: None });
     assert_eq!(children[1].metadata, Meta{ index: Some(true) });
     assert_eq!(children[2].metadata, Meta{ index: Some(false) });
+    assert_eq!(children[3].metadata, Meta{ index: None });
+    assert_eq!(children[4].metadata, Meta{ index: Some(true) });
+    assert_eq!(children[5].metadata, Meta{ index: Some(false) });
     
     let meta = Test2::metadata();
     let Kind::Struct { name, children } = meta.kind else { panic!() };
