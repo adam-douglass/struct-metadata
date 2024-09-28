@@ -263,6 +263,7 @@ basic_described!{i16, I16}
 basic_described!{u16, U16}
 basic_described!{i8, I8}
 basic_described!{u8, U8}
+basic_described!{usize, USize}
 basic_described!{f64, F64}
 basic_described!{f32, F32}
 basic_described!{bool, Bool}
