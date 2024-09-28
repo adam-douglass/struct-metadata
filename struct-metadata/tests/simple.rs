@@ -102,6 +102,10 @@ struct SimpleFields {
     /// Are cats allowed here?
     #[metadata(important: true)]
     cats: bool,
+
+    /// Platform-dependent unsigned integer
+    #[metadata(text: true)]
+    size_field: usize,
 }
 
 #[test]
@@ -113,5 +117,6 @@ fn simple_fields() {
         Entry { label: "label", docs: Some(vec!["Name used"]), has_default: false, metadata: Default::default(), type_info: u64::metadata(), aliases: &["label"] },
         Entry { label: "description", docs: None, has_default: false, metadata: [("text", "true")].into_iter().collect(), type_info: String::metadata(), aliases: &["description"] },
         Entry { label: "cats", docs: Some(vec!["Are cats allowed here?"]), has_default: false, metadata: [("important", "true")].into_iter().collect(), type_info: bool::metadata(), aliases: &["cats"] },
+        Entry { label: "size_field", docs: Some(vec!["Platform-dependent unsigned integer"]), has_default: false, metadata: [("text", "true")].into_iter().collect(), type_info: usize::metadata(), aliases: &["size_field"] },
     ]});
 }
