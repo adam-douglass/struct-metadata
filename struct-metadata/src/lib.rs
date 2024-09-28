@@ -137,6 +137,8 @@ pub enum Kind<Metadata: Default> {
     U8,
     /// Signed 8 bit integer
     I8,
+    /// Unsigned platform-dependent integer
+    USize,
     /// 64 bit floating point number
     F64,
     /// 32 bit floating point number
@@ -171,6 +173,7 @@ impl<Metadata: Default> Kind<Metadata> {
             Kind::I16 => "i16",
             Kind::U8 => "u8",
             Kind::I8 => "i8",
+            Kind::USize => "usize",
             Kind::F64 => "f64",
             Kind::F32 => "f32",
             Kind::Bool => "bool",
