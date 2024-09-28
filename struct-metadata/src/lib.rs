@@ -15,6 +15,7 @@
 pub use struct_metadata_derive::{Described, MetadataKind};
 
 use std::collections::HashMap;
+use std::collections::VecDeque;
 
 /// Information about a type along with its metadata and doc-strings.
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -136,6 +137,8 @@ pub enum Kind<Metadata: Default> {
     U8,
     /// Signed 8 bit integer
     I8,
+    /// Unsigned platform-dependent integer
+    USize,
     /// 64 bit floating point number
     F64,
     /// 32 bit floating point number
@@ -170,6 +173,7 @@ impl<Metadata: Default> Kind<Metadata> {
             Kind::I16 => "i16",
             Kind::U8 => "u8",
             Kind::I8 => "i8",
+            Kind::USize => "usize",
             Kind::F64 => "f64",
             Kind::F32 => "f32",
             Kind::Bool => "bool",
@@ -259,6 +263,7 @@ basic_described!{i16, I16}
 basic_described!{u16, U16}
 basic_described!{i8, I8}
 basic_described!{u8, U8}
+basic_described!{usize, USize}
 basic_described!{f64, F64}
 basic_described!{f32, F32}
 basic_described!{bool, Bool}
@@ -286,6 +291,17 @@ impl<M: Default, T: Described<M>> Described<M> for Vec<T> {
             docs: None,
             metadata: M::default(),
             kind: Kind::Sequence(Box::new(T::metadata()))
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl<M: Default, T: Described<M>> Described<M> for VecDeque<T> {
+    fn metadata() -> Descriptor<M> {
+        Descriptor {
+            docs: None,
+            metadata: M::default(),
+            kind: Kind::Sequence(Box::new(T::metadata())),
         }
     }
 }
