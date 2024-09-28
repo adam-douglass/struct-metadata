@@ -15,6 +15,7 @@
 pub use struct_metadata_derive::{Described, MetadataKind};
 
 use std::collections::HashMap;
+use std::collections::VecDeque;
 
 /// Information about a type along with its metadata and doc-strings.
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -286,6 +287,17 @@ impl<M: Default, T: Described<M>> Described<M> for Vec<T> {
             docs: None,
             metadata: M::default(),
             kind: Kind::Sequence(Box::new(T::metadata()))
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl<M: Default, T: Described<M>> Described<M> for VecDeque<T> {
+    fn metadata() -> Descriptor<M> {
+        Descriptor {
+            docs: None,
+            metadata: M::default(),
+            kind: Kind::Sequence(Box::new(T::metadata())),
         }
     }
 }
