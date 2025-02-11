@@ -1,6 +1,7 @@
 
 #![cfg(test)]
 
+use serde::{Deserialize, Serialize};
 use struct_metadata::{Described, Kind, MetadataKind};
 
 #[derive(Default, PartialEq, Eq, Debug)]
@@ -148,4 +149,36 @@ fn test_compound_index_defaults() {
         assert_eq!(children[2].metadata, Meta{ index: Some(false) });
     } else { panic!() }
 
+}
+
+#[derive(Serialize, Deserialize, Described)]
+#[metadata_type(Meta)]
+struct InlineInner {
+    a: u32,
+}
+
+#[derive(Serialize, Deserialize, Described)]
+#[metadata_type(Meta)]
+#[allow(dead_code)]
+struct InlineOuterMetadata {
+    #[metadata(index=true)]
+    #[serde(flatten)]
+    inner: InlineInner,
+    #[metadata(index=false)]
+    other: i64,
+    other2: i64,
+}
+
+#[test]
+fn flattened_metadata() {
+    let Kind::Struct {children, ..} = InlineOuterMetadata::metadata().kind else { panic!() };
+    assert_eq!(children.len(), 3);
+    for child in children {
+        match child.label {
+            "other" => assert_eq!(child.metadata, Meta { index: Some(false) }),
+            "other2" => assert_eq!(child.metadata, Meta { index: None }),
+            "a" => assert_eq!(child.metadata, Meta { index: Some(true) }),
+            _ => panic!(),
+        }
+    }
 }

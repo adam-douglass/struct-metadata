@@ -237,7 +237,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 
 [[package]]
 name = "struct-metadata"
-version = "1.1.2"
+version = "1.2.0"
 dependencies = [
  "chrono",
  "pretty_assertions",
@@ -249,7 +249,7 @@ dependencies = [
 
 [[package]]
 name = "struct-metadata-derive"
-version = "1.0.2"
+version = "1.1.0"
 dependencies = [
  "convert_case",
  "proc-macro2",

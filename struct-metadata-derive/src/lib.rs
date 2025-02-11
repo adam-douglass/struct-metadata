@@ -47,17 +47,13 @@ pub fn derive(input: TokenStream) -> TokenStream {
                 syn::Fields::Named(fields) => {
                     let mut children = vec![];
                     let mut flattened_children = vec![];
+                    let mut flattened_metadata = vec![];
 
                     for field in &fields.named {
                         let SerdeFieldAttrs {rename, flatten, mut has_default, mut aliases } = _parse_serde_field_attrs(&field.attrs);
                         has_default |= serde_attrs.has_default;
                         let name = field.ident.clone().unwrap();
                         let ty = &field.ty;
-                        if flatten {
-                            let fields = quote_spanned!(ty.span() => <#ty as struct_metadata::Described::<#metadata_type>>::metadata());
-                            flattened_children.push(fields);
-                            continue
-                        }
                         let ty = quote_spanned!(ty.span() => <#ty as struct_metadata::Described::<#metadata_type>>::metadata());
                         let docs = parse_doc_comment(&field.attrs);
                         let metadata: proc_macro2::TokenStream = parse_metadata_params(&metadata_type, &field.attrs);
@@ -74,14 +70,19 @@ pub fn derive(input: TokenStream) -> TokenStream {
                             quote!(stringify!(#name))
                         };
 
-                        children.push(quote!{struct_metadata::Entry::<#metadata_type> {
-                            label: #name,
-                            docs: #docs,
-                            metadata: #metadata,
-                            type_info: #ty,
-                            has_default: #has_default,
-                            aliases: &[#(#aliases),*]
-                        }});
+                        if flatten {
+                            flattened_children.push(ty);
+                            flattened_metadata.push(metadata);
+                        } else {
+                            children.push(quote!{struct_metadata::Entry::<#metadata_type> {
+                                label: #name,
+                                docs: #docs,
+                                metadata: #metadata,
+                                type_info: #ty,
+                                has_default: #has_default,
+                                aliases: &[#(#aliases),*]
+                            }});
+                        }
                     }
 
                     if flattened_children.is_empty() {
@@ -90,7 +91,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
                             children: vec![#(#children),*]
                         })
                     } else {
-                        quote!(struct_metadata::Kind::<#metadata_type>::new_struct(#outer_name, vec![#(#children),*], &mut [#(#flattened_children),*]))
+                        quote!(struct_metadata::Kind::<#metadata_type>::new_struct(#outer_name, vec![#(#children),*], &mut [#(#flattened_children),*], &mut [#(#flattened_metadata),*]))
                     }
                 },
                 syn::Fields::Unnamed(fields) => {

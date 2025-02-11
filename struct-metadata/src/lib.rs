@@ -148,7 +148,7 @@ pub enum Kind<Metadata: Default> {
     Any,
 }
 
-impl<Metadata: Default> Kind<Metadata> {
+impl<Metadata: MetadataKind> Kind<Metadata> {
     /// Fetch the name of the type
     pub fn name(&self) -> &'static str {
         match self {
@@ -182,9 +182,14 @@ impl<Metadata: Default> Kind<Metadata> {
     /// 
     /// Any structs in the flattened_children list will have their fields added to this
     /// new struct as if they were members of it. (this corresponds to the 'flatten' parameter in serde)
-    pub fn new_struct(name: &'static str, mut children: Vec<Entry<Metadata>>, flattened_children: &mut [Descriptor<Metadata>]) -> Self {
-        for child in flattened_children {
+    pub fn new_struct(name: &'static str, mut children: Vec<Entry<Metadata>>, flattened_children: &mut [Descriptor<Metadata>], flattened_metadata: &mut [Metadata]) -> Self {
+        for (child, meta) in flattened_children.iter_mut().zip(flattened_metadata.iter_mut()) {
             if let Kind::Struct { children: flattening, .. } = &mut child.kind {
+                for child in flattening.iter_mut() {
+                    child.metadata.forward_propagate_entry_defaults(meta, &child.type_info.metadata);
+                    child.type_info.propagate(Some(&child.metadata));
+                    child.metadata.backward_propagate_entry_defaults(meta, &child.type_info.metadata);
+                }
                 children.append(flattening)
             }
         }
