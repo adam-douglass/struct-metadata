@@ -30,7 +30,15 @@ pub struct Descriptor<Metadata: Default> {
 impl<Metadata: MetadataKind> Descriptor<Metadata> {
     /// A helper method used by the Described derive macro
     pub fn propagate(&mut self, context: Option<&Metadata> ) {
-        let context = context.unwrap_or(&self.metadata);
+        let context = match context {
+            Some(context) => {
+                self.metadata.forward_propagate_context(context);
+                context
+            },
+            None => {
+                &self.metadata
+            }
+        };
         match &mut self.kind {
             Kind::Struct { children, .. } => {
                 for child in children {
@@ -333,6 +341,8 @@ impl<M: Default, K: Described<M>, V: Described<M>> Described<M> for serde_json::
 
 /// Trait used to describe metadata field propagation
 pub trait MetadataKind: Default {
+    /// Update metadata values on nested contexts generally
+    fn forward_propagate_context(&mut self, _context: &Self) {}
     /// Update metadata values on an entry based on the outer context and inner type data
     fn forward_propagate_entry_defaults(&mut self, _context: &Self, _kind: &Self) {}
     /// Update metadata values on an entry based on the outer context and inner type data
