@@ -1,5 +1,7 @@
 #![cfg(test)]
 
+use std::collections::VecDeque;
+
 use struct_metadata::{Described, Descriptor, Kind, Entry};
 
 /// non trivial metadata structs
@@ -14,6 +16,10 @@ struct OptionVec {
 
     #[metadata(active=false)]
     attached: Vec<u64>,
+
+    /// A queue of strings
+    #[metadata(active=true)]
+    queue: VecDeque<String>,
 }
 
 
@@ -28,6 +34,7 @@ fn option_vec() {
                 Entry { label: "label", docs: Some(vec!["Name used"]), metadata: Default::default(), has_default: false, type_info: Descriptor { docs: None, metadata: Default::default(), kind: Kind::Option(Box::new(String::metadata())) }, aliases: &["label"] },
                 Entry { label: "score", docs: None, metadata: [("active", "true")].into_iter().collect(), has_default: false, type_info: Descriptor { docs: None, metadata: Default::default(), kind: Kind::Option(Box::new(u64::metadata())) }, aliases: &["score"] },
                 Entry { label: "attached", docs: None, metadata: [("active", "false")].into_iter().collect(), has_default: false, type_info: Descriptor { docs: None, metadata: Default::default(), kind: Kind::Sequence(Box::new(u64::metadata())) }, aliases: &["attached"] },
+                Entry { label: "queue", docs: Some(vec!["A queue of strings"]), metadata: [("active", "true")].into_iter().collect(), has_default: false, type_info: Descriptor { docs: None, metadata: Default::default(), kind: Kind::Sequence(Box::new(String::metadata())) }, aliases: &["queue"] },
             ]
         }
     });
